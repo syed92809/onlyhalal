@@ -9,6 +9,7 @@ const RegisterScreen = ({ navigation }) => {
         fullName: '',
         password: '',
         email: '',
+        
     })
 
     const updateState = (data) => setState((state) => ({ ...state, ...data }))
@@ -17,6 +18,7 @@ const RegisterScreen = ({ navigation }) => {
         fullName,
         password,
         email,
+        
     } = state;
 
     return (
@@ -43,7 +45,7 @@ const RegisterScreen = ({ navigation }) => {
         return (
             <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => navigation.push('Verification')}
+                onPress={() => navigation.push('BottomTabBar')}
                 style={styles.continueButtonStyle}>
                 <Text style={{ ...Fonts.whiteColor16Medium }}>
                     Continue
@@ -51,6 +53,7 @@ const RegisterScreen = ({ navigation }) => {
             </TouchableOpacity>
         )
     }
+
 
     function emailAddressTextField() {
         return (
@@ -61,7 +64,7 @@ const RegisterScreen = ({ navigation }) => {
                 selectionColor={Colors.primaryColor}
                 placeholderTextColor={Colors.grayColor}
                 style={styles.textFieldStyle}
-                keyboardType="email-address"
+                
             />
         )
     }
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
         width: 200.0,
         height: 150.0,
         alignSelf: 'center',
-        marginTop: Sizes.fixPadding * 2.5,
+        marginTop: Sizes.fixPadding * -1.5,
     },
     textFieldStyle: {
         ...Fonts.blackColor17Medium,

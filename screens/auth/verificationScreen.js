@@ -79,7 +79,7 @@ const VerificationScreen = ({ navigation }) => {
                     setisLoading(true)
                     setTimeout(() => {
                         setisLoading(false)
-                        navigation.push('BottomTabBar')
+                        navigation.push('Register')
                     }, 2000);
                 }}
                 style={styles.submitButtonStyle}>
@@ -113,7 +113,7 @@ const VerificationScreen = ({ navigation }) => {
                         setisLoading(true)
                         setTimeout(() => {
                             setisLoading(false)
-                            navigation.push('BottomTabBar')
+                            navigation.push('Register')
                         }, 2000);
                     }
                 }}

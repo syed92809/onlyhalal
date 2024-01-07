@@ -3,6 +3,7 @@ import { SafeAreaView, View, StatusBar, BackHandler, Text, ScrollView, Image, To
 import { Colors, Fonts, Sizes } from "../../constants/styles";
 import IntlPhoneInput from 'react-native-intl-phone-input';
 import { useFocusEffect } from "@react-navigation/native";
+import { TextInput} from "react-native";
 
 const SigninScreen = ({ navigation }) => {
 
@@ -78,7 +79,7 @@ const SigninScreen = ({ navigation }) => {
         return (
             <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => navigation.push('Register')}
+                onPress={() => navigation.push('Verification')}
                 style={styles.continueButtonStyle}>
                 <Text style={{ ...Fonts.whiteColor16Medium }}>
                     Continue
@@ -89,16 +90,24 @@ const SigninScreen = ({ navigation }) => {
 
     function mobileNumberTextField() {
         return (
-            <IntlPhoneInput
-                onChangeText={({ phoneNumber }) => updateState({ phoneNumber: phoneNumber })}
-                defaultCountry="US"
-                containerStyle={styles.phoneNumberWrapStyle}
-                dialCodeTextStyle={{ ...Fonts.blackColor16Medium }}
-                phoneInputStyle={{ flex: 1, marginLeft: Sizes.fixPadding + 5.0, ...Fonts.blackColor16Medium }}
-                placeholder="Phone Number"
-            />
-        )
+            <View style={styles.phoneNumberWrapStyle}>
+                
+                <Image
+                    source={require('../../assets/images/slider/slider_1.png')}
+                    style={{ width: 30.0, height: 20.0, marginRight: 5,marginLeft:5, alignContent:"center" }}
+                />
+                <Text style={{ ...Fonts.blackColor16Medium }}>+1</Text>
+                <TextInput
+                    style={{ flex: 1, marginLeft: Sizes.fixPadding + 5.0, ...Fonts.blackColor16Medium }}
+                    placeholder="Phone Number"
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    onChangeText={(phoneNumber) => updateState({ phoneNumber: phoneNumber })}
+                />
+            </View>
+        );
     }
+    
 
     function logionWithGoogleButton() {
         return (
@@ -182,9 +191,13 @@ const styles = StyleSheet.create({
     phoneNumberWrapStyle: {
         backgroundColor: Colors.whiteColor,
         elevation: 2.0,
+        flexDirection:"row",
+        height:50,
+        alignItems: 'center',
         borderRadius: Sizes.fixPadding - 5.0,
         marginHorizontal: Sizes.fixPadding,
         paddingVertical: Sizes.fixPadding - 5.0,
+        paddingHorizontal: Sizes.fixPadding,
         marginTop: Sizes.fixPadding * 2.0,
         marginBottom: Sizes.fixPadding * 4.0,
     },

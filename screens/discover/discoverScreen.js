@@ -72,6 +72,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_6.png"),
         foodName: 'Fried Noodles',
         foodCategory: 'Chinese',
+        amount: 5.0,
         isFavourite: false,
     },
     {
@@ -858,7 +859,7 @@ const DiscoverScreen = ({ navigation }) => {
             <View>
                 <View style={{ marginHorizontal: Sizes.fixPadding, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={{ ...Fonts.blackColor19Medium }}>
-                        Product Ordered
+                        Favourite Food
                     </Text>
                     <Text style={{ ...Fonts.primaryColor16Medium }}>
                         View all
