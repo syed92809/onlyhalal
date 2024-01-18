@@ -21,6 +21,7 @@ import RestaurantsListScreen from "./screens/restaurantsList/restaurantsListScre
 import SearchScreen from "./screens/search/searchScreen";
 import SplashScreen from "./screens/splashScreen";
 import TrackOrderScreen from "./screens/trackOrder/trackOrderScreen";
+import Toast from 'react-native-toast-message'; 
 
 
 LogBox.ignoreAllLogs();
