@@ -4,6 +4,7 @@ import { Colors, Fonts, Sizes } from "../../constants/styles";
 import { MaterialIcons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 
+
 const RegisterScreen = ({ navigation }) => {
 
     const [state, setState] = useState({
@@ -23,23 +24,27 @@ const RegisterScreen = ({ navigation }) => {
     } = state;
 
 
-const showMessage=()=>{
+const show_error_message=(message)=>{
     Toast.show({
-        type:"success",
-        text1: "Toast message",
-        text2: "Message",
+        type:"error",
+        text1: "Error",
+        text2: message,
         autoHide:true,
-        visibilityTime:3000,
+        visibilityTime:2000,
         bottomOffset:50,
+        position:"bottom"
     })
 }
+
+
 
 // Perform signup operation here
 const call_signup = () => {
     
 
     if (fullName == "" || email == "" || password == "") {
-        console.log("Fill the required fields to continue")
+        show_error_message("Fill the required fields")
+        
     }else{
         fetch("http://10.0.2.2:4000/signup",{
             method: 'POST',
@@ -55,11 +60,10 @@ const call_signup = () => {
         })
         .then(res=>res.json())
         .then(data => {
-            console.log(data);
+            
             // Check for errors in the response
             if (!data.success) {
-                console.log('Error:', data.message);
-                
+                show_error_message(data.message)
 
             } else {
                 // Successful signup, navigate to the desired screen
@@ -67,7 +71,7 @@ const call_signup = () => {
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            show_error_message(error)
         });
     }
 };
@@ -116,6 +120,7 @@ const call_signup = () => {
                 onChangeText={(text) => updateState({ email: text })}
                 placeholder="Email Address"
                 selectionColor={Colors.primaryColor}
+                keyboardType="email-address"
                 placeholderTextColor={Colors.grayColor}
                 style={styles.textFieldStyle}
                 

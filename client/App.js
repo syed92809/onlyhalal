@@ -58,6 +58,7 @@ const App = () => {
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="AddNewDeliveryAddress" component={AddNewDeliveryAddressScreen} />
       </Stack.Navigator>
+      <Toast ref={(ref) => Toast.setRef(ref)} />
     </NavigationContainer>
   );
 }

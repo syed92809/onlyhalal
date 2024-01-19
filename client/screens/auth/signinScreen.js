@@ -4,6 +4,9 @@ import { Colors, Fonts, Sizes } from "../../constants/styles";
 import IntlPhoneInput from 'react-native-intl-phone-input';
 import { useFocusEffect } from "@react-navigation/native";
 import { TextInput} from "react-native";
+import Toast from 'react-native-toast-message';
+// import {GoogleSignin,GoogleSigninButton,statusCodes,} from '@react-native-google-signin/google-signin';
+
 
 const SigninScreen = ({ navigation }) => {
 
@@ -34,6 +37,26 @@ const SigninScreen = ({ navigation }) => {
     const updateState = (data) => setState((state) => ({ ...state, ...data }));
 
     const { phoneNumber, backClickCount } = state;
+
+    const show_error_message=(message)=>{
+        Toast.show({
+            type:"error",
+            text1: "Error",
+            text2: message,
+            autoHide:true,
+            visibilityTime:2000,
+            bottomOffset:50,
+            position:"bottom"
+        })
+    }
+    const validate_number = () => {
+        if (phoneNumber ==  ""){
+            show_error_message("Fill the required field")
+        }else{
+            
+        }
+    }
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
@@ -93,7 +116,7 @@ const SigninScreen = ({ navigation }) => {
             <View style={styles.phoneNumberWrapStyle}>
                 
                 <Image
-                    source={require('../../assets/images/slider/slider_1.png')}
+                    source={require('../../assets/images/slider/us_flag.png')}
                     style={{ width: 30.0, height: 20.0, marginRight: 5,marginLeft:5, alignContent:"center" }}
                 />
                 <Text style={{ ...Fonts.blackColor16Medium }}>+1</Text>
