@@ -8,6 +8,8 @@ import AddNewDeliveryAddressScreen from "./screens/addNewDeliveryAddress/addNewD
 import AddressScreen from "./screens/address/addressScreen";
 import RegisterScreen from "./screens/auth/registerScreen";
 import SigninScreen from "./screens/auth/signinScreen";
+import login from "./screens/auth/login";
+import forgotPassword from "./screens/auth/forgot_password_screen";
 import VerificationScreen from "./screens/auth/verificationScreen";
 import ConfirmOrderScreen from "./screens/confirmOrder/confirmOrderScreen";
 import EditProfileScreen from "./screens/editProfile/editProfileScreen";
@@ -38,13 +40,14 @@ const App = () => {
           ...TransitionPresets.SlideFromRightIOS,
         }}
       >
-        <Stack.Screen name="Loading" component={LoadingScreen} />
+        {/* <Stack.Screen name="Loading" component={LoadingScreen} />
         <Stack.Screen name="Splash" component={SplashScreen} options={{ ...TransitionPresets.DefaultTransition }} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="BottomTabBar" component={BottomTabBarScreen} options={{ ...TransitionPresets.DefaultTransition }} />
+        <Stack.Screen name="login" component={login} options={{ ...TransitionPresets.DefaultTransition }} />
         <Stack.Screen name="Signin" component={SigninScreen} options={{ ...TransitionPresets.DefaultTransition }} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Verification" component={VerificationScreen} />
-        <Stack.Screen name="BottomTabBar" component={BottomTabBarScreen} options={{ ...TransitionPresets.DefaultTransition }} />
         <Stack.Screen name="Search" component={SearchScreen} />
         <Stack.Screen name="RestaurantsList" component={RestaurantsListScreen} />
         <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
@@ -55,8 +58,9 @@ const App = () => {
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <Stack.Screen name="Address" component={AddressScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} />
-        <Stack.Screen name="AddNewDeliveryAddress" component={AddNewDeliveryAddressScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
+        <Stack.Screen name="forgot_password_screen" component={forgotPassword} />
+        {/* <Stack.Screen name="AddNewDeliveryAddress" component={AddNewDeliveryAddressScreen} /> */}
       </Stack.Navigator>
       <Toast ref={(ref) => Toast.setRef(ref)} />
     </NavigationContainer>

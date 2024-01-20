@@ -67,7 +67,7 @@ const call_signup = () => {
 
             } else {
                 // Successful signup, navigate to the desired screen
-                // navigation.push('BottomTabBar');
+                navigation.push('BottomTabBar');
             }
         })
         .catch(error => {
