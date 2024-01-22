@@ -45,6 +45,8 @@ app.post("/signup", async (req, res) => {
         }
     }
 });
+
+
 //login route
 app.post("/login", async (req, res) => {
     const email = req.body["email"];
@@ -56,7 +58,7 @@ app.post("/login", async (req, res) => {
     }
 
     try {
-        const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
+        const user = await pool.query("SELECT user_id, password FROM users WHERE email = $1", [email]);
 
         if (user.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'User not found' });
@@ -68,7 +70,8 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid password' });
         }
 
-        res.status(200).json({ success: true, message: 'Login successful' });
+        // Send the user ID in the response
+        res.status(200).json({ success: true, message: 'Login successful', userId: user.rows[0].user_id });
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -76,6 +79,37 @@ app.post("/login", async (req, res) => {
 });
 
 
+//Add new address route
+app.post("/addNewAddress", async (req, res) => {
+    const address = req.body["address"];
+    const user_id = req.body["user_id"];
+
+    try {
+        // Check if the address already exists for the given user
+        const existingAddress = await pool.query(
+            "SELECT * FROM addresses WHERE address = $1 AND user_id = $2",
+            [address, user_id]
+        );
+
+        if (existingAddress.rows.length > 0) {
+            // Address already exists, send a message to the user
+            res.status(400).json({ success: false, message: 'Address already exists for this user' });
+            return;
+        }
+
+        // If the address doesn't exist, insert it into the database
+        const insertedAddress = await pool.query(
+            "INSERT INTO addresses (address, user_id) VALUES ($1, $2) RETURNING *",
+            [address, user_id]
+        );
+
+        const newAddress = insertedAddress.rows[0];
+        res.status(200).json({ success: true, message: 'Address added', address: newAddress });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
 
 
 

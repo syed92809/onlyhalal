@@ -58,9 +58,9 @@ const App = () => {
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
         <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <Stack.Screen name="Address" component={AddressScreen} />
-        <Stack.Screen name="Notifications" component={NotificationsScreen} /> */}
-        <Stack.Screen name="forgot_password_screen" component={forgotPassword} />
-        {/* <Stack.Screen name="AddNewDeliveryAddress" component={AddNewDeliveryAddressScreen} /> */}
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="forgot_password_screen" component={forgotPassword} /> */}
+        <Stack.Screen name="AddNewDeliveryAddress" component={AddNewDeliveryAddressScreen} />
       </Stack.Navigator>
       <Toast ref={(ref) => Toast.setRef(ref)} />
     </NavigationContainer>

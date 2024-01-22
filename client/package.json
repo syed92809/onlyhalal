@@ -20,6 +20,7 @@
     "expo": "^49.0.0",
     "expo-auth-session": "~5.0.2",
     "expo-crypto": "~12.4.1",
+    "expo-facebook": "^12.2.0",
     "expo-google-app-auth": "^10.0.0",
     "expo-location": "~16.1.0",
     "expo-random": "~13.2.0",
@@ -47,7 +48,8 @@
     "react-native-web": "~0.19.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "expo-module-scripts": "^3.4.0"
   },
   "private": true
 }

@@ -4,44 +4,142 @@ import { Colors, Fonts, Sizes } from "../../constants/styles";
 import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
+import Toast from 'react-native-toast-message';
 
-const LATITUDE = 37.78825;
-const LONGITUDE = -122.4324;
+
+
 const LATITUDE_DELTA = 0.10;
 const LONGITUDE_DELTA = 0.10;
-const SPACE = 0.01;
 
 const AddNewDeliveryAddressScreen = ({ navigation }) => {
 
-    const [currentmarker, setCurrentMarker] = useState({
-        latitude: LATITUDE - SPACE,
-        longitude: LONGITUDE - SPACE,
+
+
+    const [currentMarker, setCurrentMarker] = useState({
+        latitude: 0,
+        longitude: 0,
     });
+
+    //address const
     const [address, setAddress] = useState('');
+    const [get_address, setGetAddress] = useState('');
+
+
     const [isLoading, setisLoading] = useState(true);
 
+    const updateGetAddress = (value) => {
+        setGetAddress(value);
+      };
+
+
+    const show_error_message = (message) => {
+    Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: message,
+        autoHide: true,
+        visibilityTime: 2000,
+        bottomOffset: 50,
+        position: "top"
+    });
+    };
+
+    //address added message
+    const show_success_message = (message) => {
+        Toast.show({
+            type: "success",
+            text1: "Added",
+            text2: message,
+            autoHide: true,
+            visibilityTime: 2000,
+            bottomOffset: 50,
+            position: "top"
+        });
+        };
+    
+
+    const add_address = () => {
+    if (get_address.trim() === "") {
+        show_error_message("Add some address please");
+    } else{
+        fetch("http://10.0.2.2:4000/addNewAddress",{
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                "address":get_address.trim(), 
+                "user_id":userId,
+            })
+        })
+        .then(res=>res.json())
+        .then(data => {
+            
+            // Check for errors in the response
+            if (!data.success) {
+                show_error_message(data.message)
+
+            } else {
+                // Successful signup, navigate to the desired screen
+                show_success_message("New Address Added");
+                navigation.push('BottomTabBar');
+            }
+        })
+        .catch(error => {
+            show_error_message(error)
+        });
+    }
+    };
+
+
     useEffect(() => {
+        let isMounted = true;
+
         (async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 alert('Permission to access location was denied');
                 return;
             }
+
             const location = await Location.getCurrentPositionAsync();
             const userLocation = {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
+            };
+
+            if (isMounted) {
+                setCurrentMarker(userLocation);
+                setisLoading(false);
             }
-            setCurrentMarker(userLocation);
-            setisLoading(false)
+
+            // Watch for continuous location updates
+            const locationSubscription = await Location.watchPositionAsync(
+                { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 5 },
+                (newLocation) => {
+                    if (isMounted) {
+                        setCurrentMarker({
+                            latitude: newLocation.coords.latitude,
+                            longitude: newLocation.coords.longitude,
+                        });
+                    }
+                }
+            );
+
+            return () => {
+                isMounted = false;
+                locationSubscription.remove();
+            };
         })();
+
     }, []);
 
     useEffect(() => {
         (async () => {
-            getAddress()
+            getAddress();
         })();
-    }, [currentmarker])
+    }, [currentMarker]);
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.whiteColor }}>
@@ -65,75 +163,90 @@ const AddNewDeliveryAddressScreen = ({ navigation }) => {
     )
 
     async function getAddress() {
-        var streetNo = '';
-        var street = '';
-        var district = '';
-        var postalCode = '';
-        var city = '';
-        var region = '';
-        var country = '';
-        let response = await Location.reverseGeocodeAsync(currentmarker);
-        for (let item of response) {
-            if (item.streetNumber != null) {
-                streetNo = `${item.streetNumber} `;
+        try {
+            var streetNo = '';
+            var street = '';
+            var district = '';
+            var postalCode = '';
+            var city = '';
+            var region = '';
+            var country = '';
+    
+            let response = await Location.reverseGeocodeAsync(currentMarker);
+          
+    
+            if (response && response.length > 0) {
+                for (let item of response) {
+                    if (item.streetNumber != null) {
+                        streetNo = `${item.streetNumber} `;
+                    }
+                    if (item.street != null) {
+                        street = `${item.street}, `;
+                    }
+                    if (item.district != null) {
+                        district = `${item.district}, `;
+                    }
+                    if (item.postalCode != null) {
+                        postalCode = `${item.postalCode}, `;
+                    }
+                    if (item.city != null) {
+                        city = `${item.city}, `;
+                    }
+                    if (item.region != null) {
+                        region = `${item.region}, `;
+                    }
+                    if (item.country != null) {
+                        country = `${item.country}`;
+                    }
+                }
+    
+                let address = `${streetNo}${street}${district}${postalCode}${city}${region}${country}`;
+                setAddress(address);
+                
+            } else {
+                console.log('No reverse geocoding response');
             }
-            if (item.street != null) {
-                street = `${item.street}, `;
-            }
-            if (item.district != null) {
-                district = `${item.district}, `;
-            }
-            if (item.postalCode != null) {
-                postalCode = `${item.postalCode}, `;
-            }
-            if (item.city != null) {
-                city = `${item.city}, `;
-            }
-            if (item.region != null) {
-                region = `${item.region}, `;
-            }
-            if (item.country != null) {
-                country = `${item.country}`;
-            }
-
-            let address = `${streetNo}${street}${district}${postalCode}${city}${region}${country}`;
-            setAddress(address)
+        } catch (error) {
+            console.error('Error in reverse geocoding:', error);
         }
     }
-
+    
     function addressInfo() {
         return (
-            <View style={styles.addressInfoWrapStyle}>
-                <View style={styles.sheetIndicatorStyle} />
-                <Text style={{
-                    marginVertical: Sizes.fixPadding * 2.0,
-                    marginHorizontal: Sizes.fixPadding,
-                    ...Fonts.blackColor19Medium
-                }}>
-                    Type your Address
-                </Text>
-                <View style={styles.addressTextFieldWrapStyle}>
-                    <MaterialIcons name="location-on" size={24} color={Colors.primaryColor} />
-                    <TextInput
-                        placeholder="Type your address here"
-                        style={{ ...Fonts.blackColor15Medium, flex: 1, marginLeft: Sizes.fixPadding }}
-                        selectionColor={Colors.primaryColor}
-                        placeholderTextColor={Colors.primaryColor}
-                        value={address}
-                        onChangeText={(value) => setAddress(value)}
-                    />
-                </View>
-                <TouchableOpacity
-                    activeOpacity={0.9}
-                    onPress={() => navigation.pop()}
-                    style={styles.addNewAddressButtonStyle}>
-                    <Text style={{ ...Fonts.whiteColor16Medium }}>
-                        Add new Address
-                    </Text>
-                </TouchableOpacity>
+          <View style={styles.addressInfoWrapStyle}>
+            <View style={styles.sheetIndicatorStyle} />
+            <Text style={{
+              marginVertical: Sizes.fixPadding * 2.0,
+              marginHorizontal: Sizes.fixPadding,
+              ...Fonts.blackColor19Medium
+            }}>
+              Type your Address
+            </Text>
+            <View style={styles.addressTextFieldWrapStyle}>
+              <MaterialIcons name="location-on" size={24} color={Colors.primaryColor} />
+              <TextInput
+                placeholder="Type your address here"
+                style={{ ...Fonts.blackColor15Medium, flex: 1, marginLeft: Sizes.fixPadding }}
+                selectionColor={Colors.primaryColor}
+                placeholderTextColor={Colors.primaryColor}
+                value={address} // Use 'address' instead of 'get_address'
+                onChangeText={(value) => {
+                  setAddress(value);
+                  updateGetAddress(value); // Update get_address
+                }}
+              />
             </View>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => add_address()}
+              style={styles.addNewAddressButtonStyle}>
+              <Text style={{ ...Fonts.whiteColor16Medium }}>
+                Add new Address
+              </Text>
+            </TouchableOpacity>
+          </View>
         )
-    }
+      }
 
     function map() {
         return (
@@ -141,14 +254,14 @@ const AddNewDeliveryAddressScreen = ({ navigation }) => {
                 provider={PROVIDER_GOOGLE}
                 style={{ width: '100%', height: '100%' }}
                 region={{
-                    latitude: currentmarker.latitude,
-                    longitude: currentmarker.longitude,
+                    latitude: currentMarker.latitude,
+                    longitude: currentMarker.longitude,
                     latitudeDelta: LATITUDE_DELTA,
                     longitudeDelta: LONGITUDE_DELTA,
                 }}
             >
                 <Marker
-                    coordinate={currentmarker}
+                    coordinate={currentMarker}
                     onDragEnd={(e) => {
                         setCurrentMarker(e.nativeEvent.coordinate)
                     }}
@@ -165,6 +278,7 @@ const AddNewDeliveryAddressScreen = ({ navigation }) => {
 
     function header() {
         return (
+            
             <View style={styles.headerWrapStyle}>
                 <MaterialIcons name="arrow-back" size={24} color={Colors.blackColor}
                     onPress={() => navigation.pop()}

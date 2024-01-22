@@ -6,10 +6,10 @@ import { useFocusEffect } from "@react-navigation/native";
 import { TextInput} from "react-native";
 import Toast from 'react-native-toast-message';
 import * as WebBrowser from "expo-web-browser";
+import * as Facebook from 'expo-facebook';
 import * as Google from "expo-auth-session/providers/google";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-
+import login from "./login";
 
 
 WebBrowser.maybeCompleteAuthSession()
@@ -28,8 +28,27 @@ const SigninScreen = ({ navigation }) => {
         console.log("working")
       };
 
-    //setting up google signin state
-
+    //setting up facebook signin state
+    async function loginWithFacebook() {
+        try {
+          await Facebook.initializeAsync({
+            appId: '<APP_ID>',
+          });
+          const { type, token, expirationDate, permissions, declinedPermissions } =
+            await Facebook.logInWithReadPermissionsAsync({
+              permissions: ['public_profile'],
+            });
+          if (type === 'success') {
+            // Get the user's name using Facebook's Graph API
+            const response = await fetch(`https://graph.facebook.com/me?access_token=${token}`);
+            Alert.alert('Logged in!', `Hi ${(await response.json()).name}!`);
+          } else {
+            // type === 'cancel'
+          }
+        } catch ({ message }) {
+          alert(`Facebook Login Error: ${message}`);
+        }
+      }
 
   
     const show_error_message = (message) => {
@@ -62,6 +81,7 @@ const SigninScreen = ({ navigation }) => {
                     {mobileNumberTextField()}
                     {continueButton()}
                     {otpInfo()}
+                    {gotoLoginText()}
                     {loginWithFacebookButton()}
                     {logionWithGoogleButton()}
                 </ScrollView>
@@ -145,6 +165,7 @@ const SigninScreen = ({ navigation }) => {
 
     function loginWithFacebookButton() {
         return (
+            <TouchableOpacity activeOpacity={0.9} onPress={() => loginWithFacebook()}>
             <View style={styles.loginWithFacebookButtonStyle}>
                 <Image
                     source={require('../../assets/images/facebook.png')}
@@ -154,6 +175,7 @@ const SigninScreen = ({ navigation }) => {
                     Log in with Facebook
                 </Text>
             </View>
+            </TouchableOpacity>
         )
     }
 
@@ -164,6 +186,29 @@ const SigninScreen = ({ navigation }) => {
                 ...Fonts.grayColor17Medium
             }}>
                 Signin with Phone Number
+            </Text>
+        )
+    }
+
+
+    function gotoLoginText() {
+        return (
+            
+            <Text style={{
+                textAlign: 'center',
+                ...Fonts.grayColor17Medium,
+                marginTop:-20,
+                marginBottom:20
+            }}>
+            <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.push('login')}
+                >
+               <Text>
+               Already have an account? Login
+
+               </Text>
+                </TouchableOpacity>
             </Text>
         )
     }

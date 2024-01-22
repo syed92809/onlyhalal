@@ -55,13 +55,14 @@ const login = ({ navigation }) => {
         .then(res=>res.json())
         .then(data => {
             
+            setUser(userId);
             // Check for errors in the response
             if (!data.success) {
                 show_error_message(data.message)
 
             } else {
                 // Successful signup, navigate to the desired screen
-                navigation.push('BottomTabBar');
+                navigation.push('BottomTabBar',{ userId: data.userId });
             }
         })
         .catch(error => {

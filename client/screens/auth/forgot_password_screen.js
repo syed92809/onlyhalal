@@ -1,13 +1,10 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { SafeAreaView, View, StatusBar, BackHandler, Text, ScrollView, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constants/styles";
-import IntlPhoneInput from 'react-native-intl-phone-input';
 import { useFocusEffect } from "@react-navigation/native";
 import { TextInput} from "react-native";
 import Toast from 'react-native-toast-message';
 import * as WebBrowser from "expo-web-browser";
-import * as Google from "expo-auth-session/providers/google";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 
@@ -53,38 +50,40 @@ const forgotPassword = ({ navigation }) => {
       });
     };
   
-    // forgot password function
-    const call_forgot_password = () => {
-        if (email === "") {
-          show_error_message("Fill the required field");
-        } else {
-          fetch("http://10.0.2.2:4000/forgotpassword", {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              "email": email
-            })
-          })
-          .then(res => {
-            if (!res.ok) {
-              throw new Error(`HTTP error! Status: ${res.status}`);
-            }
-            return res.json();
-          })
-          .then(data => {
-            if (!data.success) {
-              show_error_message(data.message);
-            } else {
-              show_success_message("Password sent to your email");
-            }
-          })
-          .catch(error => {
-            show_error_message(error.message); // Display the error message
-          });
-        }
-      };
+// forgot password function
+const call_forgot_password = () => {
+  if (email === "") {
+    show_error_message("Fill the required field");
+  } else {
+    fetch("http://10.0.2.2:4000/forgotpassword", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        "email": email
+      })
+    })
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`HTTP error! Status: ${res.status}`);
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (!data.success) {
+        show_error_message(data.message);
+      } else {
+        show_success_message("Password sent to your email");
+      }
+    })
+    .catch(error => {
+      console.error(error); // Log the error for debugging
+      show_error_message("Failed to connect to the server");
+    });
+  }
+};
+
       
 
     return (
