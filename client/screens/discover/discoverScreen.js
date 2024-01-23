@@ -5,6 +5,8 @@ import CollapsingToolbar from "../../components/sliverAppBar";
 import { MaterialIcons } from '@expo/vector-icons';
 import { Snackbar } from 'react-native-paper';
 import { BottomSheet } from "@rneui/themed";
+import { createStackNavigator } from '@react-navigation/stack';
+import AddNewDeliveryAddressScreen from "../addNewDeliveryAddress/addNewDeliveryAddressScreen";
 
 const offerBannersList = [
     {
@@ -229,8 +231,11 @@ const { width } = Dimensions.get('screen');
 
 const intialAmount = 2.5;
 
-const DiscoverScreen = ({ navigation }) => {
+const DiscoverScreen = ({route , navigation }) => {
 
+    const userId = route?.params?.userId;
+    console.log('Route in BottomTabBar:', route);
+    
     const [state, setState] = useState({
         productsOrdereds: productsOrderedList,
         favouriteRestaurents: favouriteRestaurantsList,
@@ -262,6 +267,9 @@ const DiscoverScreen = ({ navigation }) => {
         options,
         showCustomizeBottomSheet,
     } = state;
+
+
+    
 
     return (
         
@@ -681,7 +689,7 @@ const DiscoverScreen = ({ navigation }) => {
                         activeOpacity={0.9}
                         onPress={() => {
                             updateState({ showAddressSheet: false })
-                            navigation.push('AddNewDeliveryAddress')
+                            navigation.push('AddNewDeliveryAddress', { userId: userId });
                         }}
                         style={{
                             marginTop: Sizes.fixPadding - 5.0,

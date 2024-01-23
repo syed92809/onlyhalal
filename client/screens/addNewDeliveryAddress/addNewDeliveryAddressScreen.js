@@ -5,13 +5,14 @@ import { MaterialIcons } from '@expo/vector-icons';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Toast from 'react-native-toast-message';
+import { createStackNavigator } from '@react-navigation/stack';
 
 
 
 const LATITUDE_DELTA = 0.10;
 const LONGITUDE_DELTA = 0.10;
 
-const AddNewDeliveryAddressScreen = ({ navigation }) => {
+const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
 
 
 

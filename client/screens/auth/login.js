@@ -9,8 +9,6 @@ import * as Google from "expo-auth-session/providers/google";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
-
-
 WebBrowser.maybeCompleteAuthSession()
 
 const login = ({ navigation }) => {
@@ -55,14 +53,14 @@ const login = ({ navigation }) => {
         .then(res=>res.json())
         .then(data => {
             
-            setUser(userId);
             // Check for errors in the response
             if (!data.success) {
                 show_error_message(data.message)
 
             } else {
                 // Successful signup, navigate to the desired screen
-                navigation.push('BottomTabBar',{ userId: data.userId });
+                navigation.push('BottomTabBar', { userId: data.userId });
+                console.log("User Id" + data.userId)
             }
         })
         .catch(error => {
