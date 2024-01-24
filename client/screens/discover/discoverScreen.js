@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SafeAreaView, View, Dimensions, StatusBar, StyleSheet, TouchableOpacity, FlatList, Image, Text } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constants/styles";
 import CollapsingToolbar from "../../components/sliverAppBar";
@@ -6,8 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Snackbar } from 'react-native-paper';
 import { BottomSheet } from "@rneui/themed";
 import { createStackNavigator } from '@react-navigation/stack';
-import AddNewDeliveryAddressScreen from "../addNewDeliveryAddress/addNewDeliveryAddressScreen";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const offerBannersList = [
     {
         id: '1',
@@ -231,11 +230,26 @@ const { width } = Dimensions.get('screen');
 
 const intialAmount = 2.5;
 
-const DiscoverScreen = ({route , navigation }) => {
+const DiscoverScreen = ({navigation }) => {
 
-    const userId = route?.params?.userId;
-    console.log('Route in BottomTabBar:', route);
-    
+
+    const [userId, setUserId] = useState(null);
+
+    //getting User Id from async storage
+    useEffect(() => {
+        // Retrieve userId from AsyncStorage
+        AsyncStorage.getItem('userId')
+          .then((storedUserId) => {
+            if (storedUserId) {
+              setUserId(storedUserId);
+            }
+          })
+          .catch((error) => {
+            console.error('Error retrieving userId from AsyncStorage:', error);
+          });
+        }, []);
+
+
     const [state, setState] = useState({
         productsOrdereds: productsOrderedList,
         favouriteRestaurents: favouriteRestaurantsList,
@@ -282,7 +296,9 @@ const DiscoverScreen = ({route , navigation }) => {
                         onPress={() => updateState({ showAddressSheet: true })}
                         style={{ marginLeft: Sizes.fixPadding * 2.0, marginTop: Sizes.fixPadding }}>
                         <Text style={{ ...Fonts.darkPrimaryColor15Medium }}>
+                            
                             DELIVERING TO
+
                         </Text>
                         <View style={{ marginTop: Sizes.fixPadding - 8.0, flexDirection: 'row', alignItems: 'center' }}>
                             <MaterialIcons name='location-on' size={17} color={Colors.whiteColor} />
@@ -309,11 +325,11 @@ const DiscoverScreen = ({route , navigation }) => {
                         style={styles.searchInfoWrapStyle}>
                         <MaterialIcons name="search" size={22} color={Colors.whiteColor} />
                         <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.lightPrimaryColor16Regular }}>
-                            Do you want find something?
+                            Do you want to find something?
                         </Text>
                     </TouchableOpacity>
                 }
-                toolbarColor={Colors.primaryColor}
+                toolbarColor={Colors.primaryColor}      
                 toolbarMinHeight={60}
                 toolbarMaxHeight={170}
                 isImage={false}

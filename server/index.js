@@ -58,7 +58,7 @@ app.post("/login", async (req, res) => {
     }
 
     try {
-        const user = await pool.query("SELECT user_id, password FROM users WHERE email = $1", [email]);
+        const user = await pool.query("SELECT user_id, username, password FROM users WHERE email = $1", [email]);
 
         if (user.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'User not found' });
@@ -70,8 +70,14 @@ app.post("/login", async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid password' });
         }
 
-        // Send the user ID in the response
-        res.status(200).json({ success: true, message: 'Login successful', userId: user.rows[0].user_id });
+        // Send the user ID and Username in the response
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            userId: user.rows[0].user_id,
+            username: user.rows[0].username,
+        });
+    
     } catch (error) {
         console.error(error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
@@ -82,7 +88,7 @@ app.post("/login", async (req, res) => {
 //Add new address route
 app.post("/addNewAddress", async (req, res) => {
     const address = req.body["address"];
-    const user_id = req.body["user_id"];
+    const user_id = req.body["userId"];
 
     try {
         // Check if the address already exists for the given user
@@ -107,7 +113,11 @@ app.post("/addNewAddress", async (req, res) => {
         res.status(200).json({ success: true, message: 'Address added', address: newAddress });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ success: false, message: 'Internal Server Error' });
+        if (error.constraint === "addresses_address_key") {
+            res.status(409).json({ success: false, message: 'Address already exists, please try a different one.' });
+        } else {
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
     }
 });
 

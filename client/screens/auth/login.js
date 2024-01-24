@@ -36,39 +36,46 @@ const login = ({ navigation }) => {
     };
   
     const call_login = () => {
-      if (email === "" || password == "") {
-        show_error_message("Fill the required field");
-      } else{
-        fetch("http://10.0.2.2:4000/login",{
+        if (email === "" || password === "") {
+          show_error_message("Fill the required field");
+        } else {
+          fetch("http://10.0.2.2:4000/login", {
             method: 'POST',
-            headers:{
-                'Content-Type': 'application/json',
+            headers: {
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                "email":email,
-                "password" : password,
-                
+              "email": email,
+              "password": password,
             })
-        })
-        .then(res=>res.json())
-        .then(data => {
-            
+          })
+          .then(res => res.json())
+          .then(data => {
             // Check for errors in the response
             if (!data.success) {
-                show_error_message(data.message)
-
+              show_error_message(data.message);
             } else {
-                // Successful signup, navigate to the desired screen
-                navigation.push('BottomTabBar', { userId: data.userId });
-                console.log("User Id" + data.userId)
-            }
-        })
-        .catch(error => {
-            show_error_message(error)
-        });
-    }
-    };
+              // Successful login, navigate to the desired screen
+              navigation.push('BottomTabBar');
+              console.log("User Id: " + data.userId);
+              console.log("Username: " + data.username);
+      
+              // Saving user id and username in async storage
+              AsyncStorage.multiSet([
+                ["userId", data.userId.toString()], 
+                ["username", data.username],
+              ]);
 
+              
+            }
+          })
+          .catch(error => {
+            show_error_message(error);
+          });
+        }
+      };
+
+      
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
             <StatusBar backgroundColor={Colors.primaryColor} />

@@ -6,32 +6,22 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import Toast from 'react-native-toast-message';
 import { createStackNavigator } from '@react-navigation/stack';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const LATITUDE_DELTA = 0.10;
 const LONGITUDE_DELTA = 0.10;
 
-const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
-
-
-
+const AddNewDeliveryAddressScreen = ({ navigation }) => {
     const [currentMarker, setCurrentMarker] = useState({
-        latitude: 0,
-        longitude: 0,
+      latitude: 0,
+      longitude: 0,
     });
 
-    //address const
-    const [address, setAddress] = useState('');
+    // Address state
     const [get_address, setGetAddress] = useState('');
-
-
+    const [addressInputTouched, setAddressInputTouched] = useState(false);
     const [isLoading, setisLoading] = useState(true);
-
-    const updateGetAddress = (value) => {
-        setGetAddress(value);
-      };
-
 
     const show_error_message = (message) => {
     Toast.show({
@@ -59,61 +49,70 @@ const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
         };
     
 
-    const add_address = () => {
-    if (get_address.trim() === "") {
-        show_error_message("Add some address please");
-    } else{
-        fetch("http://10.0.2.2:4000/addNewAddress",{
-            method: 'POST',
-            headers:{
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                "address":get_address.trim(), 
-                "user_id":userId,
+        const [userId, setUserId] = useState(null);
+
+        useEffect(() => {
+          AsyncStorage.getItem('userId')
+            .then((storedUserId) => {
+              if (storedUserId) {
+                setUserId(parseInt(storedUserId, 10));
+              }
             })
-        })
-        .then(res=>res.json())
-        .then(data => {
-            
-            // Check for errors in the response
-            if (!data.success) {
-                show_error_message(data.message)
-
-            } else {
-                // Successful signup, navigate to the desired screen
-                show_success_message("New Address Added");
-                navigation.push('BottomTabBar');
-            }
-        })
-        .catch(error => {
-            show_error_message(error)
-        });
-    }
-    };
-
-
-    useEffect(() => {
-        let isMounted = true;
-
-        (async () => {
+            .catch((error) => {
+              console.error('Error retrieving userId from AsyncStorage:', error);
+            });
+        }, []);
+    
+        const add_address = () => {
+          if (get_address.trim() === "" && addressInputTouched) {
+            show_error_message("Add some address please");
+          } else {
+            fetch("http://10.0.2.2:4000/addNewAddress", {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                "userId": userId,
+                "address": get_address.trim(),
+              })
+            })
+              .then(res => res.json())
+              .then(data => {
+                if (!data.success) {
+                  show_error_message(data.message)
+                } else {
+                  show_success_message("New Address Added");
+                  navigation.push('BottomTabBar');
+                }
+              })
+              .catch(error => {
+                show_error_message(error)
+              });
+          }
+        };
+    
+        useEffect(() => {
+          let isMounted = true;
+    
+          (async () => {
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 alert('Permission to access location was denied');
                 return;
             }
-
+    
             const location = await Location.getCurrentPositionAsync();
             const userLocation = {
                 latitude: location.coords.latitude,
                 longitude: location.coords.longitude,
             };
-
+    
             if (isMounted) {
                 setCurrentMarker(userLocation);
                 setisLoading(false);
             }
-
+    
             // Watch for continuous location updates
             const locationSubscription = await Location.watchPositionAsync(
                 { accuracy: Location.Accuracy.High, timeInterval: 5000, distanceInterval: 5 },
@@ -126,20 +125,20 @@ const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
                     }
                 }
             );
-
+    
             return () => {
                 isMounted = false;
                 locationSubscription.remove();
             };
-        })();
-
-    }, []);
-
-    useEffect(() => {
-        (async () => {
+          })();
+    
+        }, []);
+    
+        useEffect(() => {
+          (async () => {
             getAddress();
-        })();
-    }, [currentMarker]);
+          })();
+        }, [currentMarker]);
 
 
     return (
@@ -172,10 +171,9 @@ const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
             var city = '';
             var region = '';
             var country = '';
-    
+  
             let response = await Location.reverseGeocodeAsync(currentMarker);
-          
-    
+  
             if (response && response.length > 0) {
                 for (let item of response) {
                     if (item.streetNumber != null) {
@@ -200,17 +198,17 @@ const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
                         country = `${item.country}`;
                     }
                 }
-    
+  
                 let address = `${streetNo}${street}${district}${postalCode}${city}${region}${country}`;
-                setAddress(address);
-                
+                setGetAddress(address);
+  
             } else {
                 console.log('No reverse geocoding response');
             }
         } catch (error) {
             console.error('Error in reverse geocoding:', error);
         }
-    }
+      }
     
     function addressInfo() {
         return (
@@ -230,11 +228,11 @@ const AddNewDeliveryAddressScreen = ({ navigation , route }) => {
                 style={{ ...Fonts.blackColor15Medium, flex: 1, marginLeft: Sizes.fixPadding }}
                 selectionColor={Colors.primaryColor}
                 placeholderTextColor={Colors.primaryColor}
-                value={address} // Use 'address' instead of 'get_address'
+                value={get_address}
                 onChangeText={(value) => {
-                  setAddress(value);
-                  updateGetAddress(value); // Update get_address
-                }}
+                setAddressInputTouched(true);
+                setGetAddress(value);
+            }}
               />
             </View>
             <TouchableOpacity
