@@ -232,7 +232,7 @@ const intialAmount = 2.5;
 
 const DiscoverScreen = ({navigation }) => {
 
-
+    const [userAddresses, setUserAddresses] = useState([]);
     const [userId, setUserId] = useState(null);
 
     //getting User Id from async storage
@@ -258,7 +258,7 @@ const DiscoverScreen = ({navigation }) => {
         isFavourite: false,
         showBottomSheet: false,
         showAddressSheet: false,
-        currentAddress: addressesList[0].address,
+        currentAddress:'',
         sizeIndex: null,
         qty: 1,
         options: optionsList,
@@ -689,6 +689,32 @@ const DiscoverScreen = ({navigation }) => {
     }
 
     function selectAddressSheet() {
+        const [userAddresses, setUserAddresses] = useState([]);
+    
+        useEffect(() => {
+            // Fetch user addresses from the server when the sheet is visible                                             
+            if (showAddressSheet) {
+                fetch(`http://10.0.2.2:4000/getUserAddresses?userId=${userId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            setUserAddresses(data.addresses);
+                            console.log('Data from server:', data);
+                            console.log('User Addresses:');
+                            data.addresses.forEach(address => {
+                                console.log('ID:', address.id, 'Address:', address.address);
+                            });
+
+                        } else {
+                            console.error(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            }
+        }, [showAddressSheet, userId]);
+    
         return (
             <BottomSheet
                 isVisible={showAddressSheet}
@@ -724,26 +750,31 @@ const DiscoverScreen = ({navigation }) => {
                     </TouchableOpacity>
                 </View>
             </BottomSheet>
-        )
+        );
     }
+    
 
     function addresses() {
+
         return (
             <>
                 {
-                    addressesList.map((item) => (
+                    userAddresses.map((item) => (
                         <View key={`${item.id}`}>
                             <View style={styles.addressWrapStyle}>
                                 <TouchableOpacity
                                     activeOpacity={0.9}
-                                    onPress={() => updateState({ currentAddress: item.address, showAddressSheet: false })}
+                                    onPress={() => {
+                                        console.log('Selected Address:', item.address);
+                                        updateState({ currentAddress: item.address, showAddressSheet: false });
+                                    }}
                                     style={{
                                         ...styles.radioButtonStyle,
-                                        backgroundColor: currentAddress == item.address ? Colors.primaryColor : Colors.whiteColor,
+                                        backgroundColor: currentAddress === item.address ? Colors.primaryColor : Colors.whiteColor,
                                     }}
                                 >
                                     {
-                                        currentAddress == item.address ?
+                                        currentAddress === item.address ?
                                             <MaterialIcons
                                                 name="done"
                                                 size={18}
@@ -761,8 +792,10 @@ const DiscoverScreen = ({navigation }) => {
                     ))
                 }
             </>
-        )
+        );
     }
+    
+    
 
     function handleFavouriteRestaurentsUpdate({ id }) {
         const newList = favouriteRestaurents.map((property) => {

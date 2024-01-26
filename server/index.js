@@ -122,5 +122,22 @@ app.post("/addNewAddress", async (req, res) => {
 });
 
 
+//Retrieving data from addreesses table
+app.get("/getUserAddresses", async (req, res) => {
+    const userId = req.query.userId;
+
+    try {
+        const userAddresses = await pool.query(
+            "SELECT * FROM addresses WHERE user_id = $1",
+            [userId]
+        );
+
+        res.status(200).json({ success: true, addresses: userAddresses.rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
 
 app.listen(4000, () => console.log("Listening on port 4000"));
