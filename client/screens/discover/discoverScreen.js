@@ -232,23 +232,9 @@ const intialAmount = 2.5;
 
 const DiscoverScreen = ({navigation }) => {
 
-    const [userAddresses, setUserAddresses] = useState([]);
+
     const [userId, setUserId] = useState(null);
-
-    //getting User Id from async storage
-    useEffect(() => {
-        // Retrieve userId from AsyncStorage
-        AsyncStorage.getItem('userId')
-          .then((storedUserId) => {
-            if (storedUserId) {
-              setUserId(storedUserId);
-            }
-          })
-          .catch((error) => {
-            console.error('Error retrieving userId from AsyncStorage:', error);
-          });
-        }, []);
-
+    const [userAddresses, setUserAddresses] = useState([]);
 
     const [state, setState] = useState({
         productsOrdereds: productsOrderedList,
@@ -258,12 +244,12 @@ const DiscoverScreen = ({navigation }) => {
         isFavourite: false,
         showBottomSheet: false,
         showAddressSheet: false,
-        currentAddress:'',
+        currentAddress: '',
         sizeIndex: null,
         qty: 1,
         options: optionsList,
         showCustomizeBottomSheet: false,
-    })
+    });
 
     const updateState = (data) => setState((state) => ({ ...state, ...data }))
 
@@ -283,7 +269,42 @@ const DiscoverScreen = ({navigation }) => {
     } = state;
 
 
+    //getting User Id from async storage
+    useEffect(() => {
+        // Fetch userId from AsyncStorage
+        AsyncStorage.getItem('userId')
+            .then((storedUserId) => {
+                if (storedUserId) {
+                    setUserId(storedUserId);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving userId from AsyncStorage:', error);
+            });
+    }, []);
     
+    //getting user addresses
+    useEffect(() => {
+        // Fetch user addresses as soon as the userId is set
+        if (userId) {
+            fetch(`http://10.0.2.2:4000/getUserAddresses?userId=${userId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.addresses.length > 0) {
+                        setUserAddresses(data.addresses);
+                        // Update currentAddress with the latest address
+                        const latestAddress = data.addresses[data.addresses.length - 1].address;
+                        updateState({ currentAddress: latestAddress });
+                    } else {
+                        console.error('Error in response:', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Network error:', error);
+                });
+        }
+    }, [userId]);
+        
 
     return (
         
@@ -612,7 +633,7 @@ const DiscoverScreen = ({navigation }) => {
             }
             return property;
         });
-        updateState({ hotSales: newList });
+        updateState({ hotSales: newList });                                       
     }
 
     function hotSaleInfo() {
@@ -689,31 +710,6 @@ const DiscoverScreen = ({navigation }) => {
     }
 
     function selectAddressSheet() {
-        const [userAddresses, setUserAddresses] = useState([]);
-    
-        useEffect(() => {
-            // Fetch user addresses from the server when the sheet is visible                                             
-            if (showAddressSheet) {
-                fetch(`http://10.0.2.2:4000/getUserAddresses?userId=${userId}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            setUserAddresses(data.addresses);
-                            console.log('Data from server:', data);
-                            console.log('User Addresses:');
-                            data.addresses.forEach(address => {
-                                console.log('ID:', address.id, 'Address:', address.address);
-                            });
-
-                        } else {
-                            console.error(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            }
-        }, [showAddressSheet, userId]);
     
         return (
             <BottomSheet
@@ -755,46 +751,44 @@ const DiscoverScreen = ({navigation }) => {
     
 
     function addresses() {
-
+    
+        const validAddresses = userAddresses.filter((item) => item.address.trim() !== '');
+    
         return (
             <>
-                {
-                    userAddresses.map((item) => (
-                        <View key={`${item.id}`}>
-                            <View style={styles.addressWrapStyle}>
-                                <TouchableOpacity
-                                    activeOpacity={0.9}
-                                    onPress={() => {
-                                        console.log('Selected Address:', item.address);
-                                        updateState({ currentAddress: item.address, showAddressSheet: false });
-                                    }}
-                                    style={{
-                                        ...styles.radioButtonStyle,
-                                        backgroundColor: currentAddress === item.address ? Colors.primaryColor : Colors.whiteColor,
-                                    }}
-                                >
-                                    {
-                                        currentAddress === item.address ?
-                                            <MaterialIcons
-                                                name="done"
-                                                size={18}
-                                                color={Colors.whiteColor}
-                                            />
-                                            :
-                                            null
-                                    }
-                                </TouchableOpacity>
-                                <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor16Medium }}>
-                                    {item.address}
-                                </Text>
-                            </View>
+                {validAddresses.map((item) => (
+                    <View key={`${item.id}`}>
+                        <View style={styles.addressWrapStyle}>
+                            <TouchableOpacity
+                                activeOpacity={0.9}
+                                onPress={() => {
+                                    updateState({ currentAddress: item.address, showAddressSheet: false });
+                                }}
+                                style={{
+                                    ...styles.radioButtonStyle,
+                                    backgroundColor: currentAddress === item.address ? Colors.primaryColor : Colors.whiteColor,
+                                }}
+                            >
+                                {
+                                    currentAddress === item.address ?
+                                        <MaterialIcons
+                                            name="done"
+                                            size={18}
+                                            color={Colors.whiteColor}
+                                        />
+                                        :
+                                        null
+                                }
+                            </TouchableOpacity>
+                            <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor16Medium }}>
+                                {item.address}
+                            </Text>
                         </View>
-                    ))
-                }
+                    </View>
+                ))}
             </>
         );
     }
-    
     
 
     function handleFavouriteRestaurentsUpdate({ id }) {
@@ -1154,3 +1148,9 @@ const styles = StyleSheet.create({
 })
 
 export default DiscoverScreen;
+
+
+
+
+
+

@@ -140,4 +140,57 @@ app.get("/getUserAddresses", async (req, res) => {
 });
 
 
+
+//Add restraunt registration information route
+app.post("/addRestaurantInformation", async (req, res) => {
+    const { businessName, contactDetails, location, workingHours, branches } = req.body;
+
+    try {
+        const existingRestaurant = await pool.query(
+            "SELECT * FROM restaurants WHERE restaurant_name = $1",
+            [businessName]
+        );
+
+        if (existingRestaurant.rows.length > 0) {
+            return res.status(409).json({ success: false, message: 'Restaurant Name already exists' });
+        }
+
+        const newRestaurant = await pool.query(
+            "INSERT INTO restaurants (restaurant_name, contact_details, location, working_hours, branches) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+            [businessName, contactDetails, location, workingHours, branches]
+        );
+
+        res.status(201).json({ success: true, message: 'Restaurant added', restaurant: newRestaurant.rows[0] });
+    } catch (error) {
+        console.error(error);
+        if (error.constraint === "restaurants_restaurant_name_key") {
+            res.status(409).json({ success: false, message: 'Restaurant Name already exists, please try a different one.' });
+        } else if (error.constraint === "restaurants_contact_details_key") {
+            res.status(409).json({ success: false, message: 'Contact Number already exists, please try a different one.' });
+        } else {
+            res.status(500).json({ success: false, message: 'Internal Server Error' });
+        }
+    }
+});
+
+
+//Add restaurant menu route
+app.post("/addMenuItem", async (req, res) => {
+    const { foodName, description, price, category, image, restaurantId } = req.body;
+
+    try {
+        // Insert the new menu item into the database
+        const newMenuItem = await pool.query(
+            "INSERT INTO restaurant_menu (food_name, description, price, category, image, restaurant_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            [foodName, description, price, category, image, restaurantId]
+        );
+
+        res.status(201).json({ success: true, message: 'Menu item added', menuItem: newMenuItem.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+    }
+});
+
+
 app.listen(4000, () => console.log("Listening on port 4000"));
