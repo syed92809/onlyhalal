@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, View, StyleSheet, SafeAreaView, StatusBar, ScrollView, TouchableOpacity, Image, Dimensions, } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constants/styles";
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import Dialog from "react-native-dialog";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get('screen');
 
@@ -11,10 +12,26 @@ const ProfileScreen = ({ navigation }) => {
     const [state, setState] = useState({
         logoutDialog: false,
     })
+    const [username, setUsername] = useState(null);
 
     const updateState = (data) => setState((state) => ({ ...state, ...data }))
 
     const { logoutDialog } = state;
+
+    //getting User Name from async storage
+    useEffect(() => {
+        // Fetch username from AsyncStorage
+        AsyncStorage.getItem('username')
+            .then((storedUserName) => {
+                if (storedUserName) {
+                    setUsername(storedUserName);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving Username from AsyncStorage:', error);
+            });
+    }, []);
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.whiteColor }}>
@@ -40,11 +57,13 @@ const ProfileScreen = ({ navigation }) => {
 
     function paymentAddressAndVoucherSetting() {
         return (
+            
             <View style={styles.paymentAddressAndVoucherSettingWrapStyle}>
                 <TouchableOpacity
                     activeOpacity={0.6}
                     onPress={() => navigation.push('PaymentMethods')}
                 >
+                    
                     {settings({
                         icon: <MaterialIcons name="credit-card" size={24} color={Colors.grayColor} />,
                         setting: 'Payment Methods'
@@ -52,17 +71,22 @@ const ProfileScreen = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                     activeOpacity={0.6}
-                    onPress={() => navigation.push('Address')}
+                    onPress={() => navigation.push('AddNewDeliveryAddress')}
                 >
                     {settings({
                         icon: <MaterialIcons name="location-on" size={24} color={Colors.grayColor} />,
                         setting: 'Address'
                     })}
+                     
+                    <View
+                        style={{
+                            marginTop:5,
+                            borderBottomColor: 'grey',
+                            borderBottomWidth: StyleSheet.hairlineWidth,
+                    }}
+                    />
                 </TouchableOpacity>
-                {settings({
-                    icon: <MaterialIcons name="local-attraction" size={24} color={Colors.grayColor} />,
-                    setting: 'My Vouchers'
-                })}
+                
             </View>
         )
     }
@@ -116,8 +140,11 @@ const ProfileScreen = ({ navigation }) => {
                     }}>
                         Logout
                     </Text>
+                    
                 </View>
+                
                 <MaterialIcons name="arrow-forward-ios" size={15} color={Colors.grayColor} />
+                
             </TouchableOpacity>
         )
     }
@@ -134,22 +161,22 @@ const ProfileScreen = ({ navigation }) => {
                         setting: 'Notifications'
                     })}
                 </TouchableOpacity>
-                {settings({
-                    icon: <MaterialIcons name="language" size={24} color={Colors.grayColor} />,
-                    setting: 'Language'
-                })}
-                {settings({
-                    icon: <MaterialIcons name="settings" size={24} color={Colors.grayColor} />,
-                    setting: 'Settings'
-                })}
+            
                 {settings({
                     icon: <MaterialIcons name="group-add" size={26} color={Colors.grayColor} />,
-                    setting: 'Invite Friends'
+                    setting: 'Invite People'
                 })}
                 {settings({
                     icon: <MaterialIcons name="headset-mic" size={22} color={Colors.grayColor} />,
                     setting: 'Support'
                 })}
+                <View
+                        style={{
+                            marginTop:5,
+                            borderBottomColor: 'black',
+                            borderBottomWidth: StyleSheet.hairlineWidth,
+                    }}
+                    />
             </View>
         )
     }
@@ -179,27 +206,21 @@ const ProfileScreen = ({ navigation }) => {
                 onPress={() => navigation.push('EditProfile')}
                 style={styles.userInfoWrapStyle}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Image
-                        source={require('../../assets/images/user_profile/user_3.jpg')}
-                        style={{
-                            width: 70.0, height: 70.0,
-                            borderRadius: Sizes.fixPadding - 5.0,
-                        }}
-                        resizeMode="cover"
-                    />
+                   
                     <View style={styles.userInfoStyle}>
                         <Text style={{
                             ...Fonts.blackColor17Medium,
+                            paddingTop:15,
+                            fontSize:20,
                             width: width / 2.3,
                         }}>
-                            Fannie Jackson
+                            {username}
                         </Text>
-                        <Text style={{ ...Fonts.grayColor16Medium }}>
-                            123456789
-                        </Text>
+                        
                     </View>
                 </View>
                 <MaterialIcons name="arrow-forward-ios" size={15} color={Colors.grayColor} />
+
             </TouchableOpacity>
         )
     }
@@ -292,8 +313,8 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.whiteColor,
         borderRadius: Sizes.fixPadding - 5.0,
         marginHorizontal: Sizes.fixPadding,
-        marginBottom: Sizes.fixPadding - 5.0,
-        marginTop: Sizes.fixPadding,
+        marginBottom: Sizes.fixPadding - 20.0,
+        marginTop: Sizes.fixPadding - 10.0,
         paddingLeft: Sizes.fixPadding * 2.0,
         paddingRight: Sizes.fixPadding,
         paddingVertical: Sizes.fixPadding,

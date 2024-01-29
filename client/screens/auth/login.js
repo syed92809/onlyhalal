@@ -59,13 +59,14 @@ const login = ({ navigation }) => {
               navigation.push('BottomTabBar');
               console.log("User Id: " + data.userId);
               console.log("Username: " + data.username);
-      
+              console.log("Email: " + data.email);
+
               // Saving user id and username in async storage
               AsyncStorage.multiSet([
                 ["userId", data.userId.toString()], 
                 ["username", data.username],
+                ["email", data.email],
               ]);
-
               
             }
           })
@@ -75,7 +76,7 @@ const login = ({ navigation }) => {
         }
       };
 
-      
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
             <StatusBar backgroundColor={Colors.primaryColor} />

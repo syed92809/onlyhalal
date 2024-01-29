@@ -1,16 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Text, View, StatusBar, Image, TouchableOpacity, TextInput, Dimensions, SafeAreaView, StyleSheet } from "react-native";
 import { Ionicons, Feather, MaterialIcons } from '@expo/vector-icons';
 import { Fonts, Colors, Sizes } from "../../constants/styles";
 import Dialog from "react-native-dialog";
 import { BottomSheet } from '@rneui/themed';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("screen");
 
+
 const EditProfileScreen = ({ navigation }) => {
+    const [username, setUsername] = useState(null);
+    const [useremail, setUseremail] = useState(null);
+
+    //getting logged in user name
+    useEffect(() => {
+        AsyncStorage.getItem('username')
+            .then((storedUserName) => {
+                if (storedUserName) {
+                    setUsername(storedUserName);
+                    setFullName(storedUserName); // Update fullName here
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving Username from AsyncStorage:', error);
+            });
+    }, []);
+
+
+    //getting logged in user email
+    useEffect(() => {
+        AsyncStorage.getItem('email')
+            .then((storedUseremail) => {
+                if (storedUseremail) {
+                    setUsername(storedUseremail);
+                    setEmail(storedUseremail); 
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving Username from AsyncStorage:', error);
+            });
+    }, []);
+
 
     const [fullNameDialog, setFullnameDialog] = useState(false);
-    const [fullName, setFullName] = useState('Fannie Jackson');
+    const [fullName, setFullName] = useState(username);
     const [changeText, setChangeText] = useState(fullName);
 
     const [passwordDialog, setPasswordDialog] = useState(false);
@@ -22,7 +56,7 @@ const EditProfileScreen = ({ navigation }) => {
     const [changePhone, setChangePhone] = useState(phone);
 
     const [emialDialog, setEmailDialog] = useState(false);
-    const [email, setEmail] = useState('test@abc.com');
+    const [email, setEmail] = useState(useremail);
     const [changeEmail, setChangeEmail] = useState(email);
 
     const [isBottomSheet, setIsBottomSheet] = useState(false);
@@ -39,25 +73,6 @@ const EditProfileScreen = ({ navigation }) => {
                         Save
                     </Text>
                 </TouchableOpacity>
-            </View>
-        )
-    }
-
-    function profilePhoto() {
-        return (
-            <View style={styles.profilePhotoWrapStyle}>
-                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                    <Image source={require('../../assets/images/user_profile/user_3.jpg')}
-                        style={styles.profilePhotoStyle}
-                        resizeMode="cover"
-                    />
-                    <TouchableOpacity
-                        activeOpacity={0.9}
-                        onPress={() => setIsBottomSheet(true)}
-                        style={styles.addPhotoContainerStyle}>
-                        <Ionicons name="ios-add" size={20} color="white" />
-                    </TouchableOpacity>
-                </View>
             </View>
         )
     }
@@ -296,7 +311,6 @@ const EditProfileScreen = ({ navigation }) => {
             <StatusBar backgroundColor={Colors.primaryColor} />
             <View style={{ flex: 1 }}>
                 {backArrowAndSave()}
-                {profilePhoto()}
                 <TouchableOpacity
                     activeOpacity={0.9}
                     onPress={() => {
@@ -416,13 +430,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: Sizes.fixPadding * 2.0,
         paddingVertical: Sizes.fixPadding * 2.0
     },
-    profilePhotoStyle: {
-        height: 100.0,
-        width: 100.0,
-        borderRadius: Sizes.fixPadding - 5.0,
-        borderColor: Colors.whiteColor,
-        borderWidth: 2.0,
-    }
+   
 })
 
 export default EditProfileScreen;

@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const pool = require("./database");
 const bcrypt = require("bcrypt");
+const crypto = require('crypto');
 const saltRounds = 10; 
 
 const app = express();
@@ -58,7 +59,7 @@ app.post("/login", async (req, res) => {
     }
 
     try {
-        const user = await pool.query("SELECT user_id, username, password FROM users WHERE email = $1", [email]);
+        const user = await pool.query("SELECT user_id, username, email, password FROM users WHERE email = $1", [email]);
 
         if (user.rows.length === 0) {
             return res.status(404).json({ success: false, message: 'User not found' });
@@ -76,6 +77,7 @@ app.post("/login", async (req, res) => {
             message: 'Login successful',
             userId: user.rows[0].user_id,
             username: user.rows[0].username,
+            email: user.rows[0].email,
         });
     
     } catch (error) {
@@ -192,5 +194,54 @@ app.post("/addMenuItem", async (req, res) => {
     }
 });
 
+
+//Storing card details information route
+
+const algorithm = 'aes-256-ctr';
+
+// Function to generate a random 16-character string
+const generateSecretKey = () => {
+    return crypto.randomBytes(8).toString('hex'); // 8 bytes = 16 hex characters
+};
+
+// Encryption function
+const encrypt = (text, secretKey) => {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+    return { iv: iv.toString('hex'), content: encrypted.toString('hex') };
+};
+
+// Decryption function
+const decrypt = (hash, secretKey) => {
+    const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));
+    const decrypted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);
+    return decrypted.toString();
+};
+
+app.post("/addCard", async (req, res) => {
+    const { userId, cardType, cardNumber, expiryDate, cvv } = req.body;
+
+    try {
+        // Generate a new secret key for each encryption
+        const secretKey = generateSecretKey();
+
+        // Encrypt card details
+        const encryptedCardNumber = encrypt(cardNumber, secretKey);
+        const encryptedExpiryDate = encrypt(expiryDate, secretKey);
+        const encryptedCvv = encrypt(cvv, secretKey);
+
+        // Inserting encrypted card details into the database
+        const newCard = await pool.query(
+            "INSERT INTO user_cards (user_id, card_type, card_number, expiry_date, cvv, secret_key) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+            [userId, cardType, JSON.stringify(encryptedCardNumber), JSON.stringify(encryptedExpiryDate), JSON.stringify(encryptedCvv), secretKey]
+        );
+
+        res.status(201).json({ success: true, message: 'Card added successfully', card: newCard.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+    }
+});
 
 app.listen(4000, () => console.log("Listening on port 4000"));
