@@ -5,6 +5,7 @@ import { Fonts, Colors, Sizes } from "../../constants/styles";
 import Dialog from "react-native-dialog";
 import { BottomSheet } from '@rneui/themed';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from 'react-native-toast-message';
 
 const { width } = Dimensions.get("screen");
 
@@ -12,6 +13,21 @@ const { width } = Dimensions.get("screen");
 const EditProfileScreen = ({ navigation }) => {
     const [username, setUsername] = useState(null);
     const [useremail, setUseremail] = useState(null);
+    const [userId, setUserId] = useState(null);
+
+    //getting logged in user Id
+    useEffect(() => {
+        AsyncStorage.getItem('userId')
+            .then((storedUserId) => {
+                if (storedUserId) {
+                    setUserId(storedUserId);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving userId from AsyncStorage:', error);
+            });
+    }, []);
+
 
     //getting logged in user name
     useEffect(() => {
@@ -43,12 +59,75 @@ const EditProfileScreen = ({ navigation }) => {
     }, []);
 
 
+    const show_error_message = (message) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: message,
+          autoHide: true,
+          visibilityTime: 2000,
+          bottomOffset: 50,
+          position: "bottom"
+        });
+      };
+    
+
+    const show_success_message = (message) => {
+    Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: message,
+        autoHide: true,
+        visibilityTime: 2000,
+        bottomOffset: 50,
+        position: "bottom"
+    });
+    };
+    
+
+
+      const update_profile = async () => {
+          if (fullName ==="" || email === "" || password === "" || phone === "") {
+            show_error_message("Fill the required field");
+          } else {
+                try {
+        
+                    const response = await fetch("http://10.0.2.2:4000/updateProfile", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            userId,
+                            username: fullName, 
+                            password, 
+                            // phone,
+                            email
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.success) {
+                        console.error(data.message);
+                        return;
+                    }
+            
+                    // Profile updated successfully
+                    show_success_message("Profile info updated successfully")
+                    console.log('Profile updated successfully');
+            
+                } catch (error) {
+                    console.error('Error updating profile:', error);
+                }
+            }
+        };
+
     const [fullNameDialog, setFullnameDialog] = useState(false);
     const [fullName, setFullName] = useState(username);
     const [changeText, setChangeText] = useState(fullName);
 
     const [passwordDialog, setPasswordDialog] = useState(false);
-    const [password, setPassword] = useState('123456');
+    const [password, setPassword] = useState(password);
     const [changePassword, setChangePassword] = useState(password);
 
     const [phoneDialog, setPhoneDialog] = useState(false);
@@ -68,7 +147,7 @@ const EditProfileScreen = ({ navigation }) => {
                     onPress={() => navigation.pop()}
                 />
 
-                <TouchableOpacity activeOpacity={0.9} onPress={() => navigation.pop()}>
+                <TouchableOpacity activeOpacity={0.9} onPress={() => update_profile()}>
                     <Text style={{ ...Fonts.blueColor17Medium }}>
                         Save
                     </Text>
@@ -136,6 +215,41 @@ const EditProfileScreen = ({ navigation }) => {
     }
 
     function editPasswordDialog() {
+
+        const [oldPassword, setOldPassword] = useState('');
+
+        const handlePasswordChange = async () => {
+   
+            const storedPasswordHash = await AsyncStorage.getItem('password');
+    
+            // Comparing oldPassword with storedPasswordHash
+            fetch('http://10.0.2.2:4000/verifyPassword', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId,
+                    password: oldPassword,
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Proceed with password update
+                    setPassword(changePassword);
+                    setPasswordDialog(false);
+                } else {
+                    // Password does not match
+                    show_error_message("Old password is incorrect");
+                }
+            })
+            .catch(error => {
+                console.error('Error verifying password:', error);
+            });
+        };
+    
+
         return (
             <Dialog.Container visible={passwordDialog}
                 contentStyle={styles.dialogContainerStyle}
@@ -150,6 +264,7 @@ const EditProfileScreen = ({ navigation }) => {
                         borderBottomColor: 'gray', borderBottomWidth: 0.50, width: '100%',
                     }}>
                         <TextInput
+                            onChangeText={setOldPassword}
                             style={{ ...Fonts.blackColor16Medium, paddingBottom: Sizes.fixPadding }}
                             placeholder='Old Password'
                             secureTextEntry={true}
@@ -182,6 +297,7 @@ const EditProfileScreen = ({ navigation }) => {
                         <TouchableOpacity
                             activeOpacity={0.9}
                             onPress={() => {
+                                handlePasswordChange()
                                 setPasswordDialog(false)
                                 setPassword(changePassword);
                             }}
@@ -209,7 +325,8 @@ const EditProfileScreen = ({ navigation }) => {
                             value={changePhone}
                             onChangeText={(value) => setChangePhone(value)}
                             style={{ ...Fonts.blackColor16Medium, paddingBottom: Sizes.fixPadding }}
-                            keyboardType="numeric"
+                            keyboardType="phone-pad"
+                            maxLength={10}
                         />
                     </View>
                     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20.0 }}>
@@ -246,6 +363,7 @@ const EditProfileScreen = ({ navigation }) => {
                         <TextInput
                             value={changeEmail}
                             onChangeText={(value) => setChangeEmail(value)}
+                            keyboardType="email-address"
                             style={{ ...Fonts.blackColor16Medium, paddingBottom: Sizes.fixPadding }}
                         />
                     </View>
@@ -327,7 +445,7 @@ const EditProfileScreen = ({ navigation }) => {
                         setChangePassword(password);
                     }}
                 >
-                    {formData({ title: 'Password', value: '******' })}
+                    {formData({ title: 'Password', value: '##################' })}
                 </TouchableOpacity>
                 <TouchableOpacity
                     activeOpacity={0.9}

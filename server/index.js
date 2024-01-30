@@ -78,6 +78,7 @@ app.post("/login", async (req, res) => {
             userId: user.rows[0].user_id,
             username: user.rows[0].username,
             email: user.rows[0].email,
+            password: user.rows[0].password,
         });
     
     } catch (error) {
@@ -196,29 +197,31 @@ app.post("/addMenuItem", async (req, res) => {
 
 
 //Storing card details information route
-
 const algorithm = 'aes-256-ctr';
 
 // Function to generate a random 16-character string
 const generateSecretKey = () => {
-    return crypto.randomBytes(8).toString('hex'); // 8 bytes = 16 hex characters
+    return crypto.randomBytes(32).toString('hex');
 };
 
 // Encryption function
 const encrypt = (text, secretKey) => {
+    const keyBuffer = Buffer.from(secretKey, 'hex'); // Convert hex string back to buffer
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
+    const cipher = crypto.createCipheriv(algorithm, keyBuffer, iv);
     const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
     return { iv: iv.toString('hex'), content: encrypted.toString('hex') };
 };
 
 // Decryption function
 const decrypt = (hash, secretKey) => {
-    const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));
+    const keyBuffer = Buffer.from(secretKey, 'hex'); // Convert hex string back to buffer
+    const decipher = crypto.createDecipheriv(algorithm, keyBuffer, Buffer.from(hash.iv, 'hex'));
     const decrypted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);
     return decrypted.toString();
 };
 
+//Storing card details information route
 app.post("/addCard", async (req, res) => {
     const { userId, cardType, cardNumber, expiryDate, cvv } = req.body;
 
@@ -243,5 +246,49 @@ app.post("/addCard", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     }
 });
+
+
+//Update user profile information route
+app.post("/updateProfile", async (req, res) => {
+    const { userId, username, password, email } = req.body;
+
+    try {
+        // Update user details in the database
+        // Assuming bcrypt for password hashing
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        await pool.query(
+            "UPDATE users SET username = $1, password = $2, email = $3 WHERE user_id = $4",
+            [username, hashedPassword, email, userId]
+        );
+
+        res.status(200).json({ success: true, message: 'Profile updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+
+//Verify password change route
+app.post("/verifyPassword", async (req, res) => {
+    const { userId, password } = req.body;
+
+    try {
+        const user = await pool.query("SELECT password FROM users WHERE user_id = $1", [userId]);
+        const validPassword = await bcrypt.compare(password, user.rows[0].password);
+
+        if (!validPassword) {
+            return res.status(401).json({ success: false, message: 'Invalid password' });
+        }
+
+        res.status(200).json({ success: true, message: 'Password verified' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+});
+
+
 
 app.listen(4000, () => console.log("Listening on port 4000"));

@@ -1,20 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SafeAreaView, View, StatusBar, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constants/styles";
 import { MaterialIcons } from '@expo/vector-icons';
 import { BottomSheet } from "@rneui/themed";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from 'react-native-toast-message';
 
 const paymentMethodsList = [
     {
         id: '1',
         image: require('../../assets/images/payment/visa.png'),
-        number: ' **** **** *157',
+        number: ' **** **** ****',
         expireYear: '2020'
     },
     {
         id: '2',
         image: require('../../assets/images/payment/master_card.png'),
-        number: ' **** **** *987',
+        number: ' **** **** ****',
         expireYear: '2022'
     }
 ];
@@ -41,6 +43,24 @@ const PatymentMethodsScreen = ({ navigation }) => {
         defaultCardImage: cardTypesList[0].image,
     })
 
+    const [cardNumber, setCardNumber] = useState('');
+    const [expiryDate, setExpiryDate] = useState('');
+    const [cvv, setCvv] = useState('');
+    const [userId, setUserId] = useState(null);
+
+    //getting logged in user Id
+    useEffect(() => {
+        AsyncStorage.getItem('userId')
+            .then((storedUserId) => {
+                if (storedUserId) {
+                    setUserId(storedUserId);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving userId from AsyncStorage:', error);
+            });
+    }, []);
+
     const updateState = (data) => setState((state) => ({ ...state, ...data }))
 
     const {
@@ -49,6 +69,57 @@ const PatymentMethodsScreen = ({ navigation }) => {
         defaultCardType,
         defaultCardImage,
     } = state;
+
+    //Error toast
+    const show_error_message = (message) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: message,
+          autoHide: true,
+          visibilityTime: 2000,
+          bottomOffset: 50,
+          position: "bottom"
+        });
+      };
+
+    //Function for sending card information to endpoint
+    const add_card_info = async () => {
+        try {
+            if (cardNumber === "" || expiryDate === "" || cvv === "") {
+                show_error_message("Fill the required fields");
+                return;
+            }
+            
+            const response = await fetch('http://10.0.2.2:4000/addCard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    cardNumber,
+                    expiryDate,
+                    cvv,
+                    cardType: defaultCardType, 
+                    userId,
+                }),
+            });
+    
+            const data = await response.json();
+            if (data.success) {
+                console.log('Card added successfully');
+                // Handle successful response
+            } else {
+                console.error('Error adding card:', data.message);
+                // Handle error response
+            }
+        } catch (error) {
+            console.error('Network error:', error);
+            // Handle network errors
+        }
+    };
+
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
@@ -68,6 +139,7 @@ const PatymentMethodsScreen = ({ navigation }) => {
             {chooseCardTypeSheet()}
         </SafeAreaView>
     )
+
 
     function chooseCardTypeSheet() {
         return (
@@ -121,13 +193,13 @@ const PatymentMethodsScreen = ({ navigation }) => {
         return (
             <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => navigation.pop()}
+                onPress={() => add_card_info()}
                 style={styles.completeButtonStyle}>
                 <Text style={{ ...Fonts.whiteColor16Medium }}>
                     Complete
                 </Text>
             </TouchableOpacity>
-        )
+        );
     }
 
     function validThruAndCVVInfo() {
@@ -138,7 +210,7 @@ const PatymentMethodsScreen = ({ navigation }) => {
                 marginTop: Sizes.fixPadding + 5.0
             }}>
                 <TextInput
-                    placeholder="Valid Thru"
+                    placeholder="Valid Thru (02/24)"
                     placeholderTextColor={Colors.grayColor}
                     selectionColor={Colors.primaryColor}
                     keyboardType="numeric"
@@ -146,16 +218,21 @@ const PatymentMethodsScreen = ({ navigation }) => {
                         flex: 1,
                         ...styles.textFieldStyle,
                     }}
+                    onChangeText={setExpiryDate}
+                    value={expiryDate}
                 />
                 <TextInput
-                    placeholder="CVV"
+                    placeholder="CVV (000)"
                     placeholderTextColor={Colors.grayColor}
                     selectionColor={Colors.primaryColor}
                     keyboardType="numeric"
+                    maxLength={3}
                     style={{
                         flex: 1,
                         ...styles.textFieldStyle,
                     }}
+                    onChangeText={setCvv} 
+                    value={cvv}
                 />
             </View>
         )
@@ -165,10 +242,13 @@ const PatymentMethodsScreen = ({ navigation }) => {
         return (
             <TextInput
                 keyboardType="numeric"
-                placeholder="Card Number"
+                placeholder="Card Number (0000 0000 0000 0000)"
                 placeholderTextColor={Colors.grayColor}
                 selectionColor={Colors.primaryColor}
+                maxLength={16}
                 style={styles.textFieldStyle}
+                onChangeText={setCardNumber} 
+                value={cardNumber}
             />
         )
     }

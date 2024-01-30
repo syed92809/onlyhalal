@@ -66,6 +66,7 @@ const login = ({ navigation }) => {
                 ["userId", data.userId.toString()], 
                 ["username", data.username],
                 ["email", data.email],
+                ["password", data.password],
               ]);
               
             }
