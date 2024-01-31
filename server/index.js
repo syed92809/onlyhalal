@@ -14,6 +14,8 @@ function validateEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 }
+//************************************************************************************************************* */
+
 
 //signup route
 app.post("/signup", async (req, res) => {
@@ -46,6 +48,7 @@ app.post("/signup", async (req, res) => {
         }
     }
 });
+//************************************************************************************************************* */
 
 
 //login route
@@ -86,6 +89,7 @@ app.post("/login", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
+//************************************************************************************************************* */
 
 
 //Add new address route
@@ -123,6 +127,7 @@ app.post("/addNewAddress", async (req, res) => {
         }
     }
 });
+//************************************************************************************************************* */
 
 
 //Retrieving data from addreesses table
@@ -141,7 +146,7 @@ app.get("/getUserAddresses", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
-
+//************************************************************************************************************* */
 
 
 //Add restraunt registration information route
@@ -175,6 +180,7 @@ app.post("/addRestaurantInformation", async (req, res) => {
         }
     }
 });
+//************************************************************************************************************* */
 
 
 //Add restaurant menu route
@@ -194,6 +200,7 @@ app.post("/addMenuItem", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     }
 });
+//************************************************************************************************************* */
 
 
 //Storing card details information route
@@ -221,7 +228,6 @@ const decrypt = (hash, secretKey) => {
     return decrypted.toString();
 };
 
-//Storing card details information route
 app.post("/addCard", async (req, res) => {
     const { userId, cardType, cardNumber, expiryDate, cvv } = req.body;
 
@@ -246,6 +252,41 @@ app.post("/addCard", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
     }
 });
+//************************************************************************************************************* */
+
+
+//Retrieve card information route
+app.get("/getUserCards", async (req, res) => {
+    const { userId } = req.query;
+
+    try {
+        // Retrieve encrypted card details from the database
+        const result = await pool.query(
+            "SELECT card_type, card_number, expiry_date, cvv, secret_key FROM user_cards WHERE user_id = $1",
+            [userId]
+        );
+        
+        const cards = result.rows.map((card) => {
+            // Decrypt each piece of card information
+            const decryptedCardNumber = decrypt(JSON.parse(card.card_number), card.secret_key);
+            const decryptedExpiryDate = decrypt(JSON.parse(card.expiry_date), card.secret_key);
+            const decryptedCvv = decrypt(JSON.parse(card.cvv), card.secret_key);
+
+            return {
+                cardType: card.card_type,
+                cardNumber: decryptedCardNumber,
+                expiryDate: decryptedExpiryDate,
+                cvv: decryptedCvv
+            };
+        });
+
+        res.status(200).json({ success: true, cards: cards });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+    }
+});
+//************************************************************************************************************* */
 
 
 //Update user profile information route
@@ -268,6 +309,7 @@ app.post("/updateProfile", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
+//************************************************************************************************************* */
 
 
 //Verify password change route
@@ -288,6 +330,7 @@ app.post("/verifyPassword", async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
+//************************************************************************************************************* */
 
 
 

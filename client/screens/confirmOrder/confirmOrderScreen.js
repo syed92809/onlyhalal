@@ -10,7 +10,7 @@ const paymentMethods = [
     {
         id: '1',
         image: require('../../assets/images/payment/visa.png'),
-        number: '**** **** **** *316',
+        number: '**** **** **** *632',
     },
     {
         id: '2',

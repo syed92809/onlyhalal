@@ -18,7 +18,8 @@ const paymentMethodsList = [
         image: require('../../assets/images/payment/master_card.png'),
         number: ' **** **** ****',
         expireYear: '2022'
-    }
+    },
+   
 ];
 
 const cardTypesList = [
@@ -48,6 +49,7 @@ const PatymentMethodsScreen = ({ navigation }) => {
     const [cvv, setCvv] = useState('');
     const [userId, setUserId] = useState(null);
 
+
     //getting logged in user Id
     useEffect(() => {
         AsyncStorage.getItem('userId')
@@ -60,6 +62,48 @@ const PatymentMethodsScreen = ({ navigation }) => {
                 console.error('Error retrieving userId from AsyncStorage:', error);
             });
     }, []);
+
+
+    //retrieve user cards information endpoint
+    useEffect(() => {
+        if (userId) {
+            fetchUserCards();
+        }
+    }, [userId]);
+
+    const fetchUserCards = async () => {
+        try {
+            if (!userId) {
+                console.error('No userId available');
+                return;
+            }
+            
+            const response = await fetch(`http://10.0.2.2:4000/getUserCards?userId=${userId}`);
+            const data = await response.json();
+    
+            if (data.success && data.cards) {
+                const formattedCards = data.cards.map(card => ({
+                    image: card.cardType === 'Visa Card' ? require('../../assets/images/payment/visa.png') : require('../../assets/images/payment/master_card.png'),
+                    number: maskCardNumber(card.cardNumber), // Calling function to mask the card number
+                    expireYear: card.expiryDate, 
+                }));
+                console.log(formattedCards)
+    
+                updateState({ paymentMethodsData: formattedCards });
+            } else {
+                console.error('Failed to fetch user cards:', data.message);
+                show_error_message("Internal server error");
+            }
+        } catch (error) {
+            console.error('Error fetching user cards:', error);
+        }
+    };
+
+    // Function to mask the card number except for the last 4 digits
+    const maskCardNumber = (cardNumber) => {
+        const maskedNumber = cardNumber.slice(-4);
+        return `**** **** **** ${maskedNumber}`;
+    };
 
     const updateState = (data) => setState((state) => ({ ...state, ...data }))
 
@@ -210,7 +254,7 @@ const PatymentMethodsScreen = ({ navigation }) => {
                 marginTop: Sizes.fixPadding + 5.0
             }}>
                 <TextInput
-                    placeholder="Valid Thru (02/24)"
+                    placeholder="Valid Thru (MM/YY)"
                     placeholderTextColor={Colors.grayColor}
                     selectionColor={Colors.primaryColor}
                     keyboardType="numeric"
@@ -289,6 +333,7 @@ const PatymentMethodsScreen = ({ navigation }) => {
 
     function paymentMethods() {
         return (
+            <ScrollView style={styles.scrollView}>
             <View>
                 {paymentMethodsData.map((item) => (
                     <View key={`${item.id}`}>
@@ -320,6 +365,7 @@ const PatymentMethodsScreen = ({ navigation }) => {
                 ))
                 }
             </View>
+            </ScrollView>
         )
     }
 
@@ -396,7 +442,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: Sizes.fixPadding,
         marginBottom: Sizes.fixPadding - 8.0,
-    }
+    },
+    scrollView: {
+        marginHorizontal: 10,
+        height:150,
+      },
 })
 
 export default PatymentMethodsScreen;
