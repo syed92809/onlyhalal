@@ -333,5 +333,37 @@ app.post("/verifyPassword", async (req, res) => {
 //************************************************************************************************************* */
 
 
+//Place Order route
+app.post("/placeOrder", async (req, res) => {
+    const {
+        userId,
+        address,
+        deliveryTime,
+        item_name,
+        item_category,
+        subtotal,
+        delivery_fee,
+        total_amount,
+        voucher,
+        note,
+        payment_method
+    } = req.body;
+
+    try {
+        const newOrder = await pool.query(
+            `INSERT INTO orders (user_id, address, delivery_time, item_name, item_category, subtotal, delivery_fee, total_amount, voucher, note, payment_method) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+            [userId, address, deliveryTime, item_name, item_category, subtotal, delivery_fee, total_amount, voucher, note, payment_method]
+        );
+
+        res.status(201).json({ success: true, message: 'Order placed successfully', order: newOrder.rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: 'Internal Server Error', error: error.message });
+    }
+});
+//************************************************************************************************************* */
+
+
 
 app.listen(4000, () => console.log("Listening on port 4000"));

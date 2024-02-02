@@ -83,6 +83,7 @@ const AddNewDeliveryAddressScreen = ({ navigation }) => {
                   show_error_message(data.message)
                 } else {
                   show_success_message("New Address Added");
+
                   navigation.push('BottomTabBar');
                 }
               })

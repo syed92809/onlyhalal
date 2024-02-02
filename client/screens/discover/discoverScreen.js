@@ -306,6 +306,7 @@ const DiscoverScreen = ({navigation }) => {
     }, [userId]);
         
 
+
     return (
         
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
@@ -763,6 +764,10 @@ const DiscoverScreen = ({navigation }) => {
                                 activeOpacity={0.9}
                                 onPress={() => {
                                     updateState({ currentAddress: item.address, showAddressSheet: false });
+                                    //Saving selected address in async
+                                    AsyncStorage.multiSet([
+                                        ["userAddress", item.address], 
+                                      ]);
                                 }}
                                 style={{
                                     ...styles.radioButtonStyle,

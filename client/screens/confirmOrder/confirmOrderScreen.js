@@ -1,31 +1,175 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { SafeAreaView, View, StatusBar, StyleSheet, Dimensions, FlatList, ScrollView, TextInput, Text, Image, TouchableOpacity } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constants/styles";
 import { MaterialIcons } from '@expo/vector-icons';
 import Dialog from "react-native-dialog";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
+
 
 const { width } = Dimensions.get('screen');
 
-const paymentMethods = [
-    {
-        id: '1',
-        image: require('../../assets/images/payment/visa.png'),
-        number: '**** **** **** *632',
-    },
-    {
-        id: '2',
-        image: require('../../assets/images/payment/master_card.png'),
-        number: '**** **** **** *316',
-    }
-];
 
 const ConfirmOrderScreen = ({ navigation }) => {
 
+
+    const phoneNumber='145434211432'
+    const deliveryTime = '30'
+
     const [state, setState] = useState({
         voucherFocus: false,
-        currentPaymentIndex: paymentMethods[0].id,
+        currentPaymentIndex: null, 
         showSuccessDialog: false,
+        paymentMethods: [], 
     })
+
+
+    useEffect(() => {
+        AsyncStorage.getItem('userId').then((userId) => {
+            if (userId) {
+                fetchUserCards(userId);
+            }
+        });
+    }, []);
+    
+    //fetching user card details
+    const fetchUserCards = async () => {
+        try {
+            const userId = await AsyncStorage.getItem('userId');
+            if (!userId) {
+                console.error('No userId available');
+                return;
+            }
+            
+            const response = await fetch(`http://10.0.2.2:4000/getUserCards?userId=${userId}`);
+            const data = await response.json();
+        
+            if (data.success && data.cards.length > 0) { 
+                const formattedCards = data.cards.map((card, index) => ({
+                    key: `card-${index}`,
+                    image: card.cardType === 'Visa Card' ? require('../../assets/images/payment/visa.png') : require('../../assets/images/payment/master_card.png'),
+                    number: `**** **** **** ${card.cardNumber.slice(-4)}`,
+                }));
+        
+            
+                setState(prevState => ({ 
+                    ...prevState, 
+                    paymentMethods: formattedCards,
+                    currentPaymentIndex: formattedCards[0].key, // Setting the first card as selected
+                }));
+            } else {
+                console.error('Failed to fetch user cards:', data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching user cards:', error);
+        }
+    };
+    
+    const [username, setUsername] = useState(null);
+    const [userAddress, setUserAddress] = useState(null);
+    const [userId, setUserId] = useState(null);
+
+    //getting User Name from async storage
+    useEffect(() => {
+        // Fetch username from AsyncStorage
+        AsyncStorage.getItem('username')
+            .then((storedUserName) => {
+                if (storedUserName) {
+                    setUsername(storedUserName);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving Username from AsyncStorage:', error);
+            });
+    }, []);
+
+
+    //getting User Address from async storage
+    useEffect(() => {
+        // Fetch userAddress from AsyncStorage
+        AsyncStorage.getItem('userAddress')
+            .then((storedUserAddress) => {
+                if (storedUserAddress) {
+                    setUserAddress(storedUserAddress);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving User Address from AsyncStorage:', error);
+            });
+    }, []);
+
+
+    //getting User Id from async storage
+    useEffect(() => {
+        // Fetch userId from AsyncStorage
+        AsyncStorage.getItem('userId')
+            .then((storedUserId) => {
+                if (storedUserId) {
+                    setUserId(storedUserId);
+                }
+            })
+            .catch((error) => {
+                console.error('Error retrieving userId from AsyncStorage:', error);
+            });
+    }, []);
+
+
+    //Error toast
+    const show_error_message = (message) => {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: message,
+          autoHide: true,
+          visibilityTime: 2000,
+          bottomOffset: 50,
+          position: "bottom"
+        });
+      };
+    
+
+    // Place order operation here
+    const placeOrder = () => {
+
+        if (!userAddress) {
+            show_error_message("Please select your address");
+        } else {
+            fetch("http://10.0.2.2:4000/placeOrder", {
+                method: 'POST',
+                headers:{
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    "userId":userId,
+                    "address":userAddress,
+                    "deliveryTime":deliveryTime,
+                    "item_name": "Lemon Juice Fresh", 
+                    "item_category": "Juice", 
+                    "subtotal": 2.9,
+                    "delivery_fee": 1.3,
+                    "total_amount": 4.2,
+                    "voucher": "", 
+                    "note": "Send me a msg when you reach the location", 
+                    "payment_method": "Visa Card", 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Check for errors in the response
+                if (!data.success) {
+                    show_error_message(data.message);
+                } else {
+                    // Successful order placement
+                    console.log("Order Placed Successsfully")
+                    updateState({ showSuccessDialog: true })
+                }
+            })
+            .catch(error => {
+                show_error_message(error.message);
+            });
+        }
+    };
+
 
     const updateState = (data) => setState((state) => ({ ...state, ...data }))
 
@@ -33,7 +177,10 @@ const ConfirmOrderScreen = ({ navigation }) => {
         voucherFocus,
         currentPaymentIndex,
         showSuccessDialog,
+        paymentMethods,
     } = state;
+
+
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.whiteColor }}>
@@ -80,10 +227,9 @@ const ConfirmOrderScreen = ({ navigation }) => {
             <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={() => {
-                    updateState({ showSuccessDialog: true })
+                    placeOrder()
                     setTimeout(() => {
                         updateState({ showSuccessDialog: false })
-                        navigation.push('BottomTabBar');
                     }, 2000);
                 }}
                 style={styles.confirmButtonStyle}
@@ -96,49 +242,46 @@ const ConfirmOrderScreen = ({ navigation }) => {
     }
 
     function paymentMethod() {
-        const renderItem = ({ item }) => (
-            <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => updateState({ currentPaymentIndex: item.id })}
-                style={{
-                    ...styles.paymentMethodWrapStyle,
-                    borderColor: currentPaymentIndex == item.id ? Colors.primaryColor : Colors.grayColor,
-                }}>
-                <Image
-                    source={item.image}
-                    style={{ width: 50.0, height: 50.0, }}
-                    resizeMode="contain"
-                />
-                <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor19Medium }}>
-                    {item.number}
-                </Text>
-                {
-                    currentPaymentIndex == item.id
-                        ?
-                        <View style={styles.paymentMethodSelectorStyle}>
-                            <MaterialIcons
-                                name="done"
-                                size={15}
-                                color={Colors.whiteColor}
-                            />
-                        </View>
-                        :
-                        null
-                }
-            </TouchableOpacity>
-        )
         return (
             <FlatList
                 horizontal
-                data={paymentMethods}
-                keyExtractor={(item) => `${item.id}`}
-                renderItem={renderItem}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingLeft: Sizes.fixPadding }}
+                data={state.paymentMethods}
+                keyExtractor={item => item.key}
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        activeOpacity={0.9}
+                        onPress={() => setState(prevState => ({ ...prevState, currentPaymentIndex: item.key }))}
+                        style={{
+                            ...styles.paymentMethodWrapStyle,
+                            borderColor: currentPaymentIndex == item.key ? Colors.primaryColor : Colors.grayColor,
+                        }}>
+                        <Image
+                            source={item.image}
+                            style={{ width: 50.0, height: 50.0, }}
+                            resizeMode="contain"
+                        />
+                        <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor19Medium }}>
+                            {item.number}
+                        </Text>
+                        {
+                            currentPaymentIndex == item.key
+                                ?
+                                <View style={styles.paymentMethodSelectorStyle}>
+                                    <MaterialIcons
+                                        name="done"
+                                        size={15}
+                                        color={Colors.whiteColor}
+                                    />
+                                </View>
+                                :
+                                null
+                        }
+                    </TouchableOpacity>
+                )}
             />
-        )
+        );
     }
-
+    
     function noteInfo() {
         return (
             <View>
@@ -262,7 +405,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
                     Delivery Time
                 </Text>
                 <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor17Medium }}>
-                    45 min
+                    {deliveryTime}
                 </Text>
             </View>
         )
@@ -271,11 +414,11 @@ const ConfirmOrderScreen = ({ navigation }) => {
     function deliveryToInfo() {
         return (
             <View style={{ marginBottom: Sizes.fixPadding + 5.0, marginHorizontal: Sizes.fixPadding, }}>
-                <View style={styles.deliveryToTitleWrapStyle}>
+                <View style={styles.deliveryToTitleWrapStyle} >
                     <Text style={{ ...Fonts.blackColor17Medium }}>
                         Delivery to
                     </Text>
-                    <Text style={{ ...Fonts.blueColor17Medium }}>
+                    <Text style={{ ...Fonts.blueColor17Medium }}  onPress={() => navigation.push('AddNewDeliveryAddress')}>
                         Add New Address
                     </Text>
                 </View>
@@ -294,7 +437,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
                                 style={{ marginLeft: Sizes.fixPadding * 2.0 }}
                             />
                             <Text style={{ marginLeft: Sizes.fixPadding - 2.0, ...Fonts.blackColor16Medium }}>
-                                76A England
+                                {userAddress}
                             </Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -306,7 +449,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
                                 style={{ marginLeft: Sizes.fixPadding * 2.0 }}
                             />
                             <Text style={{ marginLeft: Sizes.fixPadding - 2.0, ...Fonts.blackColor14Regular }}>
-                                Beatrice Owen
+                                {username}
                             </Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -318,7 +461,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
                                 style={{ marginLeft: Sizes.fixPadding * 2.0 }}
                             />
                             <Text style={{ marginLeft: Sizes.fixPadding - 2.0, ...Fonts.blackColor14Regular }}>
-                                +1(454) 34211432
+                                {phoneNumber}
                             </Text>
                         </View>
                     </View>
@@ -342,12 +485,6 @@ const ConfirmOrderScreen = ({ navigation }) => {
                         Confirm Order
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ ...Fonts.grayColor17Medium }}>
-                            ID:
-                        </Text>
-                        <Text style={{ ...Fonts.blackColor17Medium }}>
-                            43e2116
-                        </Text>
                     </View>
                 </View>
             </View>
