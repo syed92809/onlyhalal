@@ -126,7 +126,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
           position: "bottom"
         });
       };
-    
+
 
     // Place order operation here
     const placeOrder = () => {

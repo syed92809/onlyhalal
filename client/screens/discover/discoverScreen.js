@@ -73,7 +73,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_6.png"),
         foodName: 'Fried Noodles',
         foodCategory: 'Chinese',
-        amount: 5.0,
+        amount: 3.0,
         isFavourite: false,
     },
     {
@@ -81,6 +81,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_1.png"),
         foodName: 'Hakka Nuddles',
         foodCategory: 'Chinese',
+        amount: 2.4,
         isFavourite: false,
     },
     {
@@ -88,6 +89,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_2.png"),
         foodName: 'Dry Manchuriyan',
         foodCategory: 'Chinese',
+        amount: 5.0,
         isFavourite: false,
     },
     {
@@ -95,6 +97,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_3.png"),
         foodName: 'Margherita Pizza',
         foodCategory: 'Delicious Pizza',
+        amount: 2.0,
         isFavourite: false,
     },
     {
@@ -102,6 +105,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_4.png"),
         foodName: 'Thin Crust Pizza',
         foodCategory: 'Delicious Pizza',
+        amount: 3.5,
         isFavourite: false,
     },
     {
@@ -109,6 +113,7 @@ const productsOrderedList = [
         image: require("../../assets/images/products/products_5.png"),
         foodName: 'Veg Burger',
         foodCategory: 'Fast Food',
+        amount: 1.5,
         isFavourite: false,
     },
 ];
@@ -749,7 +754,7 @@ const DiscoverScreen = ({navigation }) => {
             </BottomSheet>
         );
     }
-    
+
 
     function addresses() {
     
@@ -880,6 +885,13 @@ const DiscoverScreen = ({navigation }) => {
         updateState({ productsOrdereds: newList })
     }
 
+
+    function handleAddToCart(item) {
+        // Add to cart logic goes here
+        console.log("Added to cart:", item);
+    }
+
+
     function productsOrderedInfo() {
         const renderItem = ({ item }) => (
             <View style={styles.productsOrderedInfoWrapStyle}>
@@ -897,7 +909,7 @@ const DiscoverScreen = ({navigation }) => {
                         updateState({ isFavourite: item.isFavourite, showSnackBar: true })
                     }}
                 />
-
+                
                 <View style={{
                     paddingHorizontal: Sizes.fixPadding - 5.0,
                     paddingBottom: Sizes.fixPadding,
@@ -909,6 +921,22 @@ const DiscoverScreen = ({navigation }) => {
                     <Text style={{ marginTop: Sizes.fixPadding - 7.0, ...Fonts.grayColor14Medium }}>
                         {item.foodCategory}
                     </Text>
+                    <View style={{ marginTop: Sizes.fixPadding - 7.0, flexDirection: "row", alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Text style={{ ...Fonts.primaryColor20MediumBold }}>
+                            ${item.amount.toFixed(1)}
+                        </Text>
+                        <TouchableOpacity
+                            activeOpacity={0.9}
+                            onPress={() => updateState({ showCustomizeBottomSheet: true })}
+                            style={styles.addIconWrapStyle}
+                        >
+                            <MaterialIcons
+                                name="add"
+                                size={17}
+                                color={Colors.whiteColor}
+                            />
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         )
