@@ -402,23 +402,23 @@ const ConfirmOrderScreen = ({ navigation }) => {
             alignItems: "center",
           }}
         >
-        {order && order.item && (
-            <Image
-                source={{ uri: `http://192.168.1.105:4000/uploads/${order.item.image}` }}
-                style={{
-                width: 80.0,
-                height: 80.0,
-                borderRadius: Sizes.fixPadding - 5.0,
-                }}
-            />
-        )}
+        
+          <Image
+              source={{ uri: `http://10.0.2.2:4000/uploads/${order.image}` }}
+              style={{
+              width: 80.0,
+              height: 80.0,
+              borderRadius: Sizes.fixPadding - 5.0,
+              }}
+          />
+       
 
           <View style={{ marginLeft: Sizes.fixPadding + 5.0 }}>
             <Text style={{ ...Fonts.blackColor16Medium }}>
-              {order.item.category}
+              {order.item_category}
             </Text>
             <Text style={{ ...Fonts.grayColor14Medium }}>
-              {order.item.food_name}
+              {order.item_name}
             </Text>
           </View>
         </View>
@@ -430,7 +430,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
           }}
         >
           <Text style={{ ...Fonts.blackColor16Medium }}>Subtotal (1 item)</Text>
-          <Text style={{ ...Fonts.blackColor16Medium }}>${order.total}</Text>
+          <Text style={{ ...Fonts.blackColor16Medium }}>${order.subtotal}</Text>
         </View>
         <View
           style={{
@@ -459,7 +459,7 @@ const ConfirmOrderScreen = ({ navigation }) => {
         >
           <Text style={{ ...Fonts.primaryColor20MediumBold }}>Total</Text>
           <Text style={{ ...Fonts.primaryColor20MediumBold }}>
-            ${order.total + 1.3}
+            ${order.subtotal + 1.3}
           </Text>
         </View>
       </View>

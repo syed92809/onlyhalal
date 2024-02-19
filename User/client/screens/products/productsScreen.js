@@ -453,7 +453,7 @@ const Products = ({ navigation }) => {
         return (
             <View style={styles.juiceInfoWrapStyle}>
                 <Text style={{ ...Fonts.blackColor19Medium }}>
-                    Juice
+                    Drinks
                 </Text>
                 <Text style={{ marginBottom: Sizes.fixPadding + 5.0, marginTop: Sizes.fixPadding - 5.0, ...Fonts.grayColor14Medium }}>
                     2 items
@@ -583,11 +583,9 @@ const Products = ({ navigation }) => {
             }}>
                 <View style={{ marginHorizontal: Sizes.fixPadding, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={{ ...Fonts.blackColor19Medium }}>
-                        Popular Items
+                        Food Items
                     </Text>
-                    <Text style={{ ...Fonts.primaryColor16Medium }}>
-                        See all
-                    </Text>
+
                 </View>
                 <FlatList
                     horizontal

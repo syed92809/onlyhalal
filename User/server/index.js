@@ -640,7 +640,7 @@ app.get("/restaurants", async (req, res) => {
       return res.status(200).json(response.rows);
     }
   });
-  
+
 
   // Get single Menu Item Route
   app.get("/getItem/:id", async (req, res) => {

@@ -461,6 +461,7 @@ const DiscoverScreen = ({ navigation }) => {
       </View>
     );
   }
+  
   function totalInfo(item) {
     return (
       <View

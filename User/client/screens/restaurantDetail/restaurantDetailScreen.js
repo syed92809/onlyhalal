@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { SafeAreaView, View, useWindowDimensions, StyleSheet, Text, } from "react-native";
+import { SafeAreaView, View, Image, useWindowDimensions, StyleSheet, Text, } from "react-native";
 import { Colors, Fonts, Sizes } from "../../constants/styles";
 import CollapsingToolbar from "../../components/sliverAppBar";
 import { Snackbar } from 'react-native-paper';
@@ -8,8 +8,10 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import Products from "../products/productsScreen";
 import Review from "../review/reviewScreen";
 import Information from "../information/informationScreen";
+import { useRoute } from "@react-navigation/native";
 
-const RestaurantDetailScreen = ({ navigation }) => {
+const RestaurantDetailScreen = ({navigation }) => {
+
 
     const [state, setState] = useState({
         isFavourite: false,
@@ -23,8 +25,15 @@ const RestaurantDetailScreen = ({ navigation }) => {
         showSnackBar,
     } = state;
 
+
+    
+    const route = useRoute();
+    const item = route.params?.item;
+    console.log(item);
+
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bodyBackColor }}>
+            {item && (
             <CollapsingToolbar
                 leftItem={
                     <MaterialIcons
@@ -52,8 +61,9 @@ const RestaurantDetailScreen = ({ navigation }) => {
                 }
                 element={
                     <View>
+                        
                         <Text style={{ ...Fonts.whiteColor22Medium }}>
-                            Bar 61 Restaurant
+                            {item.restaurant_name}
                         </Text>
                         <View style={{ marginTop: Sizes.fixPadding - 2.0, flexDirection: 'row', alignItems: 'center' }}>
                             <MaterialIcons
@@ -62,7 +72,7 @@ const RestaurantDetailScreen = ({ navigation }) => {
                                 color={Colors.whiteColor}
                             />
                             <Text style={{ marginLeft: Sizes.fixPadding - 8.0, ...Fonts.whiteColor14Regular }}>
-                                76A England
+                                {item.location}
                             </Text>
                         </View>
                         <View style={{ marginTop: Sizes.fixPadding - 2.0, flexDirection: 'row', alignItems: 'center' }}>
@@ -81,13 +91,15 @@ const RestaurantDetailScreen = ({ navigation }) => {
                 toolbarMinHeight={50}
                 toolbarMaxHeight={200}
                 isImageBlur={true}
-                src={require('../../assets/images/restaurant/restaurant_3.png')}
+                source={{ uri: `http://10.0.2.2:4000/uploads/${item.cover}` }}
                 childrenMinHeight={720}
             >
+
                 <View style={{ flex: 1, backgroundColor: Colors.primaryColor, }}>
                     <TabBarView navigation={navigation} />
                 </View>
             </CollapsingToolbar>
+            )}
             <Snackbar
                 style={styles.snackBarStyle}
                 visible={showSnackBar}
