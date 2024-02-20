@@ -627,19 +627,44 @@ app.get("/restaurants", async (req, res) => {
       return res.status(200).json(response.rows);
     }
   });
-  
+
   // Get Total 5 MenuItems Route
   app.get("/hotsales", async (req, res) => {
-    const response = await pool.query("SELECT * FROM restaurant_menu LIMIT 5");
-    if (!response) {
-      return res.status(404).json({
+    try {
+      const query = `
+      SELECT
+      rm.*,
+      r.restaurant_name,
+      array_agg(DISTINCT item_sizes.size) AS sizes,
+      array_agg(DISTINCT item_extras.option) AS options
+    FROM
+      restaurant_menu rm
+    JOIN
+      restaurants r ON rm.restaurant_id = r.id
+    LEFT JOIN
+      item_sizes ON rm.id = item_sizes.item_id
+    LEFT JOIN
+      item_extras ON rm.id = item_extras.item_id
+    GROUP BY
+      rm.id, r.restaurant_name;    
+      `;
+      const response = await pool.query(query);
+      if (response.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "No Menu found!",
+        });
+      } else {
+        return res.status(200).json(response.rows);
+      }
+    } catch (err) {
+      console.error(err);
+      return res.status(500).json({
         success: false,
-        message: "No Menu found!",
+        message: "Server error",
       });
-    } else {
-      return res.status(200).json(response.rows);
     }
-  });
+  });  
 
 
   // Get single Menu Item Route

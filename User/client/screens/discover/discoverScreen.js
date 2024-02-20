@@ -193,7 +193,7 @@ const DiscoverScreen = ({ navigation }) => {
   }, []);
 
   const [restaurants, setRestaurant] = useState();
-  const [menuItem, setMenuItem] = useState();
+  const [menuItem, setMenuItem] = useState([]);
   const [itemId, setItemId] = useState();
   const [item, setItem] = useState({});
   const [order, setOrder] = useState([]);
@@ -207,10 +207,25 @@ const DiscoverScreen = ({ navigation }) => {
         
         });
     };
-    const fetchMenuItems = () => {
-      fetch("http://10.0.2.2:4000/hotsales")
-        .then((res) => res.json())
-        .then((json) => setMenuItem(json));
+    const fetchMenuItems = async () => {
+      try {
+        const response = await fetch("http://10.0.2.2:4000/hotsales");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
+        
+        if (json && Array.isArray(json)) {
+          setMenuItem(json);
+          console.log(json);
+        } else {
+          // Handle the case where json is not an array
+          setMenuItem([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch menu items:", error);
+        setMenuItem([]);
+      }
     };
 
     fetchResturants();
@@ -343,12 +358,18 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function custmizeBottomSheet(id) {
+  function custmizeBottomSheet() {
+    const selectedItem = menuItem.find((mItem) => mItem.id === itemId);
+    // If selectedItem is undefined, don't try to access its properties.
+    if (!selectedItem) {
+      return null; // or some loading placeholder
+    }
     return (
       <BottomSheet
         isVisible={showCustomizeBottomSheet}
         containerStyle={{ backgroundColor: "rgba(0.5, 0.25, 0, 0.2)" }}
-        onBackdropPress={() => updateState({ showCustomizeBottomSheet: false })}
+        onBackdropPress={() => 
+          updateState({ showCustomizeBottomSheet: false })}
       >
         <TouchableOpacity
           activeOpacity={0.9}
@@ -367,9 +388,9 @@ const DiscoverScreen = ({ navigation }) => {
             {CustmizeItemInfo(itemId)}
           </TouchableOpacity>
           {sizeTitle()}
-          {sizesInfo()}
+          {sizesInfo(selectedItem.sizes)}
           {optionsTitle()}
-          {optionsInfo()}
+          {optionsInfo(selectedItem.options)}
           {totalInfo(item)}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             {CheckOut(order)}
@@ -423,11 +444,15 @@ const DiscoverScreen = ({ navigation }) => {
     updateState({ options: newList });
   }
 
-  function optionsInfo() {
+  function optionsInfo(options) {
+    // If options are not passed or are empty, return null or some placeholder
+    if (!options || options.length === 0) {
+      return null;
+    }
     return (
       <View style={{ paddingTop: Sizes.fixPadding }}>
-        {options.map((item) => (
-          <View key={`${item.id}`}>
+        {options.map((option, index) => (
+        <View key={index}>
             <View style={styles.optionWrapStyle}>
               <TouchableOpacity
                 activeOpacity={0.9}
@@ -453,7 +478,7 @@ const DiscoverScreen = ({ navigation }) => {
                   ...Fonts.blackColor16Medium,
                 }}
               >
-                {item.option}
+                {option}
               </Text>
             </View>
           </View>
@@ -509,7 +534,12 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function sizesInfo() {
+  function sizesInfo(sizesComponent) {
+    // If sizes are not passed or are empty, return null or some placeholder
+    if (!sizes || sizes.length === 0) {
+      return null;
+    }
+
     return (
       <View
         style={{
@@ -518,12 +548,15 @@ const DiscoverScreen = ({ navigation }) => {
           paddingTop: Sizes.fixPadding,
         }}
       >
-        {sizes({ size: "S", contain: "500 ml", price: 0, index: 1 })}
-        {sizes({ size: "M", contain: "750 ml", price: 0.5, index: 2 })}
-        {sizes({ size: "L", contain: "1100 ml", price: 1.2, index: 3 })}
-      </View>
-    );
-  }
+      {sizesComponent.map((size, index) => sizes({
+        size: size.size, 
+        contain: size.contain, 
+        price: size.price, 
+        index 
+      }))}
+    </View>
+  );
+}
 
   function sizes({ size, contain, price, index }) {
     return (
@@ -584,19 +617,7 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function CustmizeItemInfo(itemId) {
-    useEffect(() => {
-      console.log(itemId);
-      const fetchItem = async () => {
-        const response = await fetch(
-          `http://10.0.2.2:4000/getItem/${itemId}`
-        );
-        const data = await response.json();
-        setItem(data);
-      };
-      fetchItem();
-      console.log(item);
-    }, [itemId]);
+  function CustmizeItemInfo(item) {
     return (
       <View style={styles.custmizeItemInfoWrapStyle}>
         <Image
@@ -728,7 +749,7 @@ const DiscoverScreen = ({ navigation }) => {
     const renderItem = ({ item }) => (
       <View style={styles.hotSalesInfoWrapStyle}>
         <Image
-          source={{ uri: `http://10.0.2.2:4000/uploads/${item.image}` }}
+          source={{ uri: `http://10.0.2.2:4000/uploads/${item?.image}` }}
           style={styles.hotSaleImageStyle}
         />
         <MaterialIcons
@@ -755,7 +776,7 @@ const DiscoverScreen = ({ navigation }) => {
               ...Fonts.grayColor14Medium,
             }}
           >
-            {item.category}
+            {item.restaurant_name}
           </Text>
           <View
             style={{
