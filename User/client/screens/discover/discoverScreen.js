@@ -127,16 +127,7 @@ const productsOrderedList = [
 ];
 
 const optionsList = [
-  {
-    id: "1",
-    option: "Add Lemon",
-    isSelected: false,
-  },
-  {
-    id: "2",
-    option: "Add Ice",
-    isSelected: false,
-  },
+
 ];
 
 const { width } = Dimensions.get("screen");
@@ -217,7 +208,6 @@ const DiscoverScreen = ({ navigation }) => {
         
         if (json && Array.isArray(json)) {
           setMenuItem(json);
-          console.log(json);
         } else {
           // Handle the case where json is not an array
           setMenuItem([]);
@@ -360,9 +350,8 @@ const DiscoverScreen = ({ navigation }) => {
 
   function custmizeBottomSheet() {
     const selectedItem = menuItem.find((mItem) => mItem.id === itemId);
-    // If selectedItem is undefined, don't try to access its properties.
     if (!selectedItem) {
-      return null; // or some loading placeholder
+      return null; 
     }
     return (
       <BottomSheet
@@ -385,7 +374,7 @@ const DiscoverScreen = ({ navigation }) => {
           >
             <View style={styles.bottomSheetOpenCloseDividerStyle} />
             {addNewItemTitle()}
-            {CustmizeItemInfo(itemId)}
+            <CustmizeItemInfo itemId={itemId} />
           </TouchableOpacity>
           {sizeTitle()}
           {sizesInfo(selectedItem.sizes)}
@@ -394,7 +383,7 @@ const DiscoverScreen = ({ navigation }) => {
           {totalInfo(item)}
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             {CheckOut(order)}
-            {addToCartAndItemsInfo(item)}
+            {selectedItem && item && addToCartAndItemsInfo(item, selectedItem)}
           </View>
         </TouchableOpacity>
       </BottomSheet>
@@ -417,13 +406,58 @@ const DiscoverScreen = ({ navigation }) => {
       </TouchableOpacity>
     );
   }
-  function addToCartAndItemsInfo(item) {
+
+
+  //Add items to cart function
+  function addToCartAndItemsInfo(item, selectedItem) {
+    const handleAddToCart = () => {
+      if (!selectedItem) {
+        console.error("Selected item is not defined");
+        return;
+      }
+  
+      // Collecting item details
+      const itemDetails = {
+        item_id: item.id,
+        user_id: userId,
+        image: item.image,
+        name: item.food_name,
+        price: item.price,
+        quantity: state.qty, 
+        total: (item.price * state.qty).toFixed(2),
+        size: state.sizeIndex !== null ? selectedItem.sizes[state.sizeIndex] : null, 
+        options: state.options.filter(option => option.isSelected).map(option => option.name),
+      };
+      console.log("Selected Item:", selectedItem);
+      console.log("Size Index:", state.sizeIndex);
+      console.log('Sending to cart:', itemDetails);
+  
+      fetch('http://10.0.2.2:4000/addToCart', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(itemDetails),
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Add to cart response:', data);
+        if (data.success) {
+          updateState({ showCustomizeBottomSheet: false });
+          // handle successful cart addition here, such as updating the cart state
+        } else {
+          console.error('Failed to add item to cart:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Network or server error:', error);
+      });
+    };
+   
     return (
       <TouchableOpacity
         activeOpacity={0.9}
-        onPress={() => {
-          updateState({ showCustomizeBottomSheet: false });
-        }}
+        onPress={handleAddToCart}
         style={styles.addToCartAndItemsInfoWrapStyle}
       >
         <Text style={{ ...Fonts.whiteColor16Medium, textAlign: "center" }}>
@@ -433,43 +467,41 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function updateOptions({ id }) {
-    const newList = options.map((item) => {
-      if (item.id === id) {
-        const updatedItem = { ...item, isSelected: !item.isSelected };
-        return updatedItem;
-      }
-      return item;
+  
+  //update options function
+  function updateOptions(optionId) {
+    updateState(prevState => {
+      const newOptions = prevState.options.map(option => {
+        if (option.id === optionId) {
+          return { ...option, isSelected: !option.isSelected };
+        }
+        return option;
+      });
+      return { ...prevState, options: newOptions };
     });
-    updateState({ options: newList });
   }
+  
+    
 
   function optionsInfo(options) {
-    // If options are not passed or are empty, return null or some placeholder
     if (!options || options.length === 0) {
       return null;
     }
     return (
       <View style={{ paddingTop: Sizes.fixPadding }}>
-        {options.map((option, index) => (
-        <View key={index}>
+        {options.map((option) => (
+          <View key={option.id}>
             <View style={styles.optionWrapStyle}>
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => updateOptions({ id: item.id })}
+                onPress={() => updateOptions(option.id)}
                 style={{
                   ...styles.radioButtonStyle,
-                  backgroundColor: item.isSelected
-                    ? Colors.primaryColor
-                    : Colors.whiteColor,
+                  backgroundColor: option.isSelected ? Colors.primaryColor : Colors.whiteColor,
                 }}
               >
-                {item.isSelected ? (
-                  <MaterialIcons
-                    name="done"
-                    size={18}
-                    color={Colors.whiteColor}
-                  />
+                {option.isSelected ? (
+                  <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
                 ) : null}
               </TouchableOpacity>
               <Text
@@ -478,7 +510,7 @@ const DiscoverScreen = ({ navigation }) => {
                   ...Fonts.blackColor16Medium,
                 }}
               >
-                {option}
+                {option} 
               </Text>
             </View>
           </View>
@@ -487,11 +519,13 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
   
+  
   function totalInfo(item) {
+
+    const totalPrice = item.price * state.qty; 
+  
     return (
-      <View
-        style={{ paddingTop: Sizes.fixPadding, marginRight: Sizes.fixPadding }}
-      >
+      <View style={{ paddingTop: Sizes.fixPadding, marginRight: Sizes.fixPadding }}>
         <View
           style={{
             flexDirection: "row",
@@ -514,12 +548,13 @@ const DiscoverScreen = ({ navigation }) => {
               fontSize: 20,
             }}
           >
-            ${(item.price * qty).toFixed(1)}
+            ${totalPrice.toFixed(2)}
           </Text>
         </View>
       </View>
     );
   }
+  
 
   function optionsTitle() {
     return (
@@ -534,65 +569,58 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function sizesInfo(sizesComponent) {
-    // If sizes are not passed or are empty, return null or some placeholder
-    if (!sizes || sizes.length === 0) {
-      return null;
+  function sizesInfo(sizesArray) {
+    if (!sizesArray || sizesArray.length === 0) {
+      return <Text>No sizes available</Text>;
     }
-
+  
+    const { sizeIndex } = state; 
+  
     return (
-      <View
-        style={{
-          backgroundColor: Colors.whiteColor,
-          paddingHorizontal: Sizes.fixPadding,
-          paddingTop: Sizes.fixPadding,
-        }}
-      >
-      {sizesComponent.map((size, index) => sizes({
-        size: size.size, 
-        contain: size.contain, 
-        price: size.price, 
-        index 
-      }))}
-    </View>
-  );
-}
-
-  function sizes({ size, contain, price, index }) {
-    return (
-      <View style={styles.sizesWrapStyle}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => updateState({ sizeIndex: index })}
-            style={{
-              ...styles.radioButtonStyle,
-              backgroundColor:
-                sizeIndex == index ? Colors.primaryColor : Colors.whiteColor,
-            }}
-          >
-            {sizeIndex == index ? (
-              <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
-            ) : null}
-          </TouchableOpacity>
-          <Text
-            style={{
-              marginLeft: Sizes.fixPadding,
-              ...Fonts.blackColor16Medium,
-            }}
-          >
-            Sizes {size}
-          </Text>
-          <Text
-            style={{ marginLeft: Sizes.fixPadding, ...Fonts.grayColor14Medium }}
-          >
-            ({contain})
-          </Text>
-        </View>
-        <Text style={{ ...Fonts.blackColor16Medium }}>${price}</Text>
+      <View style={{ backgroundColor: Colors.whiteColor, paddingHorizontal: Sizes.fixPadding, paddingTop: Sizes.fixPadding }}>
+        {sizesArray.map((size, index) => {
+          return sizes({
+            size,
+            // contain and price might not be needed, comment them out if not used
+            // contain: size.contain, 
+            // price: size.price, 
+            index,
+            sizeIndex,
+          })
+        })}
       </View>
     );
   }
+
+  function sizes({ size, index, sizeIndex }) {
+    const isSelected = sizeIndex === index;
+  
+    return (
+      <View key={index} style={styles.sizesWrapStyle}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => updateState({ sizeIndex: sizeIndex === index ? null : index })}
+            style={{
+              ...styles.radioButtonStyle,
+              backgroundColor: isSelected ? Colors.primaryColor : Colors.whiteColor,
+            }}
+          >
+            {isSelected && (
+              <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
+            )}
+          </TouchableOpacity>
+          <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor16Medium }}>
+            {size}
+          </Text>
+          {/* <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.grayColor14Medium }}>
+            ({contain})
+          </Text>
+          <Text style={{ ...Fonts.blackColor16Medium }}>${price}</Text> */}
+        </View>
+      </View>
+    );
+  }  
 
   function addNewItemTitle() {
     return (
@@ -617,7 +645,14 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function CustmizeItemInfo(item) {
+  function CustmizeItemInfo({ itemId }) {
+    useEffect(() => {
+      const filterItem = menuItem.find((item) => item.id === itemId); 
+      setItem(filterItem); 
+    }, [itemId, menuItem]);
+  
+    if (!item) return null; 
+  
     return (
       <View style={styles.custmizeItemInfoWrapStyle}>
         <Image
@@ -795,6 +830,7 @@ const DiscoverScreen = ({ navigation }) => {
                 updateState(
                   { showCustomizeBottomSheet: true },
                   setItemId(item.id)
+                  
                 )
               }
               style={styles.addIconWrapStyle}

@@ -716,6 +716,64 @@ app.get("/restaurants", async (req, res) => {
 
 //************************************************************************************************************* */
 
+//Add to cart route
+app.post("/addToCart", async (req, res) => {
+  const { item_id, user_id, image, name, price, quantity, total, size, options } = req.body;
+
+  try {
+    // Insert the new cart item into the database
+    const newCartItem = await pool.query(
+      "INSERT INTO addtocart (item_id, user_id, image, name, price, quantity, total, size, options) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+      [item_id, user_id, image, name, price, quantity, total, size, JSON.stringify(options)] 
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Item added to cart",
+      cartItem: newCartItem.rows[0],
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
+//************************************************************************************************************* */
+
+// Fetch addtocart details route
+app.get("/getCartItems", async (req, res) => {
+  const userId = req.query.userId; 
+
+  try {
+    const getCartItems = await pool.query(
+      "SELECT * FROM public.addtocart WHERE user_id = $1",
+      [userId] 
+    );
+
+    if (getCartItems.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No Items in Cart!",
+      });
+    } else {
+      return res.status(200).json(getCartItems.rows); 
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch items",
+      error: error.message
+    });
+  }
+});
+
+//************************************************************************************************************* */
+
 
 
 
