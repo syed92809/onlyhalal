@@ -8,9 +8,9 @@ import CartCard from "../../components/cartCard";
 import { MaterialIcons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Snackbar } from "react-native-paper";
+import { BottomSheet } from "@rneui/themed";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from 'react-native-toast-message';
-
 
 
 
@@ -59,6 +59,34 @@ const CartScreen = ({ navigation }) => {
   const [cartItems, setCartItems] = useState([]);
   const [showSnackBar, setShowSnackBar] = useState(false);
   const [listData, setListData] = useState(restaurantsList);
+  const [rowSwipeAnimatedValues, setRowSwipeAnimatedValues] = useState({});
+  const [selectedItemId, setSelectedItemId] = useState(null);
+
+  const [state, setState] = useState({
+    sizeIndex: null,
+    qty: 1,
+    showCustomizeBottomSheet: false,
+  });
+
+
+  const updateState = (data) => setState((state) => ({ ...state, ...data }));
+
+  const {
+    qty,
+    showCustomizeBottomSheet,
+  } = state;
+
+
+
+  // Initialization of rowSwipeAnimatedValues for list
+  useEffect(() => {
+    const initRowSwipeValues = {};
+    restaurantsList.forEach((item) => {
+      initRowSwipeValues[item.key] = new Animated.Value(0);
+    });
+    setRowSwipeAnimatedValues(initRowSwipeValues);
+  }, []);
+
 
   //getting User Id from async storage
   useEffect(() => {
@@ -84,13 +112,16 @@ const CartScreen = ({ navigation }) => {
       if (response.ok) {
         const formattedData = data.map((item, index) => ({
           key: `${index}`,
-          name: item.food_name,
+          id:item.id,
+          food_name: item.name,
           quantity: item.quantity,
           price: item.price,
           image: { uri: `http://10.0.2.2:4000/uploads/${item.image}` }, 
+          restaurant: item.restaurant_name,
+
         }));
         setCartItems(formattedData);
-
+        
         // Initialize or update Animated.Values for each item
         const updatedRowSwipeAnimatedValues = {};
         formattedData.forEach((item, index) => {
@@ -124,6 +155,257 @@ const CartScreen = ({ navigation }) => {
 
 
 
+//   //Options Function
+//   function optionsInfo(options) {
+//     if (!options || options.length === 0) {
+//       return null;
+//     }
+//     return (
+//       <View style={{ paddingTop: Sizes.fixPadding }}>
+//         {options.map((option) => (
+//           <View key={option.id}>
+//             <View style={styles.optionWrapStyle}>
+//               <TouchableOpacity
+//                 activeOpacity={0.9}
+//                 onPress={() => updateOptions(option.id)}
+//                 style={{
+//                   ...styles.radioButtonStyle,
+//                   backgroundColor: option.isSelected ? Colors.primaryColor : Colors.whiteColor,
+//                 }}
+//               >
+//                 {option.isSelected ? (
+//                   <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
+//                 ) : null}
+//               </TouchableOpacity>
+//               <Text
+//                 style={{
+//                   marginLeft: Sizes.fixPadding,
+//                   ...Fonts.blackColor16Medium,
+//                 }}
+//               >
+//                 {option} 
+//               </Text>
+//             </View>
+//           </View>
+//         ))}
+//       </View>
+//     );
+//   }
+  
+
+//   //Total Function
+//   function totalInfo(item) {
+
+//     const totalPrice = item.price * state.qty; 
+  
+//     return (
+//       <View style={{ paddingTop: Sizes.fixPadding, marginRight: Sizes.fixPadding }}>
+//         <View
+//           style={{
+//             flexDirection: "row",
+//             alignItems: "center",
+//             alignSelf: "flex-end",
+//           }}
+//         >
+//           <Text
+//             style={{
+//               ...Fonts.darkPrimaryColor16Medium,
+//               color: "#000",
+//               fontSize: 20,
+//             }}
+//           >
+//             Total:{" "}
+//           </Text>
+//           <Text
+//             style={{
+//               ...Fonts.darkPrimaryColor16Medium,
+//               fontSize: 20,
+//             }}
+//           >
+//             ${totalPrice.toFixed(2)}
+//           </Text>
+//         </View>
+//       </View>
+//     );
+//   }
+
+//   function optionsTitle() {
+//     return (
+//       <View
+//         style={{
+//           backgroundColor: Colors.bodyBackColor,
+//           padding: Sizes.fixPadding,
+//         }}
+//       >
+//         <Text style={{ ...Fonts.grayColor16Medium }}>Options</Text>
+//       </View>
+//     );
+//   }
+
+//   function sizesInfo(sizesArray) {
+//     if (!sizesArray || sizesArray.length === 0) {
+//       return <Text>No sizes available</Text>;
+//     }
+  
+//     const { sizeIndex } = state; 
+  
+//     return (
+//       <View style={{ backgroundColor: Colors.whiteColor, paddingHorizontal: Sizes.fixPadding, paddingTop: Sizes.fixPadding }}>
+//         {sizesArray.map((size, index) => {
+//           return sizes({
+//             size,
+//             // contain and price might not be needed, comment them out if not used
+//             // contain: size.contain, 
+//             // price: size.price, 
+//             index,
+//             sizeIndex,
+//           })
+//         })}
+//       </View>
+//     );
+//   }
+
+//   function sizes({ size, index, sizeIndex }) {
+//     const isSelected = sizeIndex === index;
+    
+//     return (
+//       <View key={index} style={styles.sizesWrapStyle}>
+//         <View style={{ flexDirection: "row", alignItems: "center" }}>
+//           <TouchableOpacity
+//             activeOpacity={0.9}
+//             onPress={() => updateState({ sizeIndex: sizeIndex === index ? null : index })}
+//             style={{
+//               ...styles.radioButtonStyle,
+//               backgroundColor: isSelected ? Colors.primaryColor : Colors.whiteColor,
+//             }}
+//           >
+//             {isSelected && (
+//               <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
+//             )}
+//           </TouchableOpacity>
+//           <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor16Medium }}>
+//             {size}
+//           </Text>
+//           {/* <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.grayColor14Medium }}>
+//             ({contain})
+//           </Text>
+//           <Text style={{ ...Fonts.blackColor16Medium }}>${price}</Text> */}
+//         </View>
+//       </View>
+//     );
+//   }  
+
+//   function addNewItemTitle() {
+//     return (
+//       <Text
+//         style={{
+//           marginHorizontal: Sizes.fixPadding,
+//           marginBottom: Sizes.fixPadding + 5.0,
+//           ...Fonts.blackColor19Medium,
+//         }}
+//       >
+//         Add New Item
+//       </Text>
+//     );
+//   }
+
+//   function sizeTitle() {
+//     return (
+//       <View style={styles.sizeTitleStyle}>
+//         <Text style={{ ...Fonts.grayColor16Medium }}>Size</Text>
+//         <Text style={{ ...Fonts.grayColor16Medium }}>Price</Text>
+//       </View>
+//     );
+//   }
+
+
+  // Sheet Function
+  function CustmizeItemInfo({ itemId }) {
+    const selectedItem = cartItems.find(item => item.id === itemId);
+    if (!selectedItem || !showCustomizeBottomSheet) {
+      return null;
+    }
+    return (
+      <BottomSheet
+        isVisible={showCustomizeBottomSheet}
+        containerStyle={{ backgroundColor: "rgba(0.5, 0.25, 0, 0.2)" }}
+        onBackdropPress={() => 
+          updateState({ showCustomizeBottomSheet: false })}
+      >
+      <View style={styles.custmizeItemInfoWrapStyle}>
+        <Image
+          source={selectedItem.image}
+          style={{
+            width: 80.0,
+            height: 80.0,
+            borderRadius: Sizes.fixPadding - 5.0,
+          }}
+        />
+        <View
+          style={{
+            flex: 1,
+            marginVertical: Sizes.fixPadding - 7.0,
+            justifyContent: "space-between",
+            marginLeft: Sizes.fixPadding,
+          }}
+        >
+          <Text style={{ ...Fonts.blackColor16Medium }}>{selectedItem.food_name}</Text>
+          <View
+            style={{
+              alignItems: "flex-start",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Text style={{ ...Fonts.primaryColor20MediumBold, color:Colors.orangeRatingColor }}>
+              ${(selectedItem.price * qty).toFixed(1)}
+            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => {
+                  qty > 1 ? updateState({ qty: qty - 1 }) : null;
+                }}
+                style={{
+                  backgroundColor: qty > 1 ? Colors.primaryColor : "#E0E0E0",
+                  ...styles.qtyAddRemoveButtonStyle,
+                }}
+              >
+                <MaterialIcons
+                  name="remove"
+                  color={qty > 1 ? Colors.whiteColor : Colors.orangeRatingColor}
+                  size={18}
+                />
+              </TouchableOpacity>
+              <Text
+                style={{
+                  marginHorizontal: Sizes.fixPadding,
+                  ...Fonts.blackColor16Medium,
+                }}
+              >
+                {qty}
+              </Text>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => updateState({ qty: qty + 1 })}
+                style={{
+                  backgroundColor: Colors.orangeRatingColor,
+                  ...styles.qtyAddRemoveButtonStyle,
+                }}
+              >
+                <MaterialIcons name="add" color={Colors.whiteColor} size={18} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </View>
+      </BottomSheet>
+    );
+  }
+
+
+
+
 const closeRow = (rowMap, rowKey) => {
     if (rowMap[rowKey]) {
         rowMap[rowKey].closeRow();
@@ -144,25 +426,61 @@ const onSwipeValueChange = swipeData => {
     rowSwipeAnimatedValues[key].setValue(Math.abs(value));
 };
 
-const renderItem = ({ item }) => (
-    <TouchableHighlight
-      underlayColor={Colors.lightGray}
-      onPress={() => console.log('Item pressed')}
-      style={styles.itemContainer}
-    >
-      <View style={styles.itemRow}>
-        <Image source={{ uri: item.image.uri }} style={styles.itemImage} />
-        <View style={styles.itemDetails}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-          <Text style={styles.itemPrice}>Price: ${item.price}</Text>
-        </View>
-      </View>
-    </TouchableHighlight>
-  );
 
-const renderHiddenItem = (data, rowMap) => (
-    
+const renderItem = data => (
+    <TouchableHighlight
+        style={{ backgroundColor: Colors.bodyBackColor }}
+        activeOpacity={0.9}
+    >
+        <View style={styles.restaurantWrapStyle}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', }}>
+                <Image
+                    source={data.item.image}
+                    style={styles.restaurantImageStyle}
+                />
+                <View style={{ width: width / 2.0, marginLeft: Sizes.fixPadding, height: 100.0, justifyContent: 'space-evenly' }}>
+                    <Text numberOfLines={1} style={{ ...Fonts.blackColor16Medium }}>
+                     {data.item.quantity} {data.item.food_name}
+                    </Text>
+                   
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text numberOfLines={1} style={{ ...Fonts.blackColor16Medium }}>{data.item.restaurant}</Text>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <MaterialIcons name="attach-money" size={20} color={Colors.orangeRatingColor} />
+                        <Text numberOfLines={1} style={{ ...Fonts.blackColor16Medium }}>
+                            {data.item.price}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableHighlight onPress={() => {
+                updateState(
+                    { showCustomizeBottomSheet: true },
+                    setSelectedItemId(data.item.id)
+                    
+                  )
+                }}>
+                <MaterialIcons name="remove-red-eye" size={20} color={Colors.orangeRatingColor} />
+                </TouchableHighlight>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MaterialIcons name="delete" size={20} color={Colors.orangeRatingColor} />
+                
+            </View>
+           
+        </View>
+    </TouchableHighlight>
+);
+
+const renderHiddenItem = (data, rowMap) => {
+    const animatedValue = rowSwipeAnimatedValues[data.item.key];
+    if (!animatedValue) {
+      console.error('Animated value not found for key:', data.item.key);
+      return null; 
+    }
     <View style={{ alignItems: 'center', flex: 1, }}>
         <TouchableOpacity
             style={styles.backDeleteContinerStyle}
@@ -197,7 +515,7 @@ const renderHiddenItem = (data, rowMap) => (
             </Animated.View>
         </TouchableOpacity>
     </View>
-);
+};
 
 return (
     <View style={styles.container}>
@@ -213,7 +531,7 @@ return (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                     <MaterialIcons name="bookmark-outline" size={60} color={Colors.grayColor} />
                     <Text style={{ ...Fonts.grayColor17Medium, marginTop: Sizes.fixPadding * 2.0 }}>
-                        No Item in Cart
+                        No Items in Cart
                     </Text>
                 </View>
                 :
@@ -239,9 +557,17 @@ return (
             Item Removed
         </Snackbar>
     </View>
+    <CustmizeItemInfo itemId={selectedItemId} />
+    {/* {sizeTitle()}
+    {sizesInfo(selectedItemId.sizes)}
+    {optionsTitle()}
+    {optionsInfo(selectedItemId.options)}
+    {totalInfo(item)} */}
     </View>
 );
 }
+
+
 
 const styles = StyleSheet.create({
     container: {
@@ -282,7 +608,33 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: Sizes.fixPadding - 5.0,
         borderBottomLeftRadius: Sizes.fixPadding - 5.0,
     },
-
+    custmizeItemInfoWrapStyle: {
+        marginBottom: Sizes.fixPadding * 2.0,
+        flexDirection: "row",
+        flex: 1,
+        marginHorizontal: Sizes.fixPadding,
+        backgroundColor:Colors.whiteColor,
+        borderTopLeftRadius:15,
+        borderTopRightRadius:15,
+        
+      },
+    qtyAddRemoveButtonStyle: {
+        width: 27.0,
+        height: 27.0,
+        borderRadius: 13.5,
+        alignItems: "center",
+        marginRight:10,
+        justifyContent: "center",
+      },
+    bottomSheetOpenCloseDividerStyle: {
+        backgroundColor: Colors.grayColor,
+        height: 4.0,
+        borderRadius: Sizes.fixPadding,
+        width: 40.0,
+        alignSelf: "center",
+        marginTop: Sizes.fixPadding,
+        marginBottom: Sizes.fixPadding * 2.0,
+      },
     headerWrapStyle: {
         paddingLeft: Sizes.fixPadding + 5.0,
         paddingRight: Sizes.fixPadding,

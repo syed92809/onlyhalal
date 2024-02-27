@@ -426,7 +426,7 @@ const DiscoverScreen = ({ navigation }) => {
         quantity: state.qty, 
         total: (item.price * state.qty).toFixed(2),
         size: state.sizeIndex !== null ? selectedItem.sizes[state.sizeIndex] : null, 
-        options: state.options.filter(option => option.isSelected).map(option => option.name),
+        options: state.options.filter(option => option?.isSelected).map(option => option.name),
       };
       console.log("Selected Item:", selectedItem);
       console.log("Size Index:", state.sizeIndex);
@@ -594,7 +594,7 @@ const DiscoverScreen = ({ navigation }) => {
 
   function sizes({ size, index, sizeIndex }) {
     const isSelected = sizeIndex === index;
-  
+    
     return (
       <View key={index} style={styles.sizesWrapStyle}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -645,13 +645,13 @@ const DiscoverScreen = ({ navigation }) => {
     );
   }
 
-  function CustmizeItemInfo({ itemId }) {
-    useEffect(() => {
+  function CustmizeItemInfo({ itemId }) { 
+    useEffect(() => { 
       const filterItem = menuItem.find((item) => item.id === itemId); 
       setItem(filterItem); 
     }, [itemId, menuItem]);
   
-    if (!item) return null; 
+    if (!item) return null;       
   
     return (
       <View style={styles.custmizeItemInfoWrapStyle}>

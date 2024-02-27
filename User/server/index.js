@@ -239,7 +239,7 @@ app.post("/addMenuItem", async (req, res) => {
 //************************************************************************************************************* */
 
 
-//Storing card details information route
+
 const algorithm = 'aes-256-ctr';
 
 // Function to generate a random 16-character string
@@ -750,7 +750,7 @@ app.get("/getCartItems", async (req, res) => {
 
   try {
     const getCartItems = await pool.query(
-      "SELECT * FROM public.addtocart WHERE user_id = $1",
+      "SELECT a.id,a.item_id, a.user_id, a.image,a.name,a.price,a.quantity,a.total,a.size,a.options,r.restaurant_name FROM public.addtocart a JOIN public.restaurant_menu m ON a.item_id = m.id JOIN public.restaurants r ON m.restaurant_id = r.id WHERE a.user_id = $1;",
       [userId] 
     );
 
