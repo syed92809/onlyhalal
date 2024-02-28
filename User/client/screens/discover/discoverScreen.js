@@ -479,9 +479,7 @@ const DiscoverScreen = ({ navigation }) => {
       });
       return { ...prevState, options: newOptions };
     });
-  }
-  
-    
+  }    
 
   function optionsInfo(options) {
     if (!options || options.length === 0) {

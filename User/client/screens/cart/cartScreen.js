@@ -11,6 +11,7 @@ import { Snackbar } from "react-native-paper";
 import { BottomSheet } from "@rneui/themed";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from 'react-native-toast-message';
+import { color } from "@rneui/themed/dist/config";
 
 
 
@@ -61,6 +62,7 @@ const CartScreen = ({ navigation }) => {
   const [listData, setListData] = useState(restaurantsList);
   const [rowSwipeAnimatedValues, setRowSwipeAnimatedValues] = useState({});
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [item, setItem] = useState({});
 
   const [state, setState] = useState({
     sizeIndex: null,
@@ -118,6 +120,9 @@ const CartScreen = ({ navigation }) => {
           price: item.price,
           image: { uri: `http://10.0.2.2:4000/uploads/${item.image}` }, 
           restaurant: item.restaurant_name,
+          item_sizes:item.size,
+          item_options:item.options,
+          item_total:item.total
 
         }));
         setCartItems(formattedData);
@@ -155,176 +160,117 @@ const CartScreen = ({ navigation }) => {
 
 
 
-//   //Options Function
-//   function optionsInfo(options) {
-//     if (!options || options.length === 0) {
-//       return null;
-//     }
-//     return (
-//       <View style={{ paddingTop: Sizes.fixPadding }}>
-//         {options.map((option) => (
-//           <View key={option.id}>
-//             <View style={styles.optionWrapStyle}>
-//               <TouchableOpacity
-//                 activeOpacity={0.9}
-//                 onPress={() => updateOptions(option.id)}
-//                 style={{
-//                   ...styles.radioButtonStyle,
-//                   backgroundColor: option.isSelected ? Colors.primaryColor : Colors.whiteColor,
-//                 }}
-//               >
-//                 {option.isSelected ? (
-//                   <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
-//                 ) : null}
-//               </TouchableOpacity>
-//               <Text
-//                 style={{
-//                   marginLeft: Sizes.fixPadding,
-//                   ...Fonts.blackColor16Medium,
-//                 }}
-//               >
-//                 {option} 
-//               </Text>
-//             </View>
-//           </View>
-//         ))}
-//       </View>
-//     );
-//   }
-  
-
-//   //Total Function
-//   function totalInfo(item) {
-
-//     const totalPrice = item.price * state.qty; 
-  
-//     return (
-//       <View style={{ paddingTop: Sizes.fixPadding, marginRight: Sizes.fixPadding }}>
-//         <View
-//           style={{
-//             flexDirection: "row",
-//             alignItems: "center",
-//             alignSelf: "flex-end",
-//           }}
-//         >
-//           <Text
-//             style={{
-//               ...Fonts.darkPrimaryColor16Medium,
-//               color: "#000",
-//               fontSize: 20,
-//             }}
-//           >
-//             Total:{" "}
-//           </Text>
-//           <Text
-//             style={{
-//               ...Fonts.darkPrimaryColor16Medium,
-//               fontSize: 20,
-//             }}
-//           >
-//             ${totalPrice.toFixed(2)}
-//           </Text>
-//         </View>
-//       </View>
-//     );
-//   }
-
-//   function optionsTitle() {
-//     return (
-//       <View
-//         style={{
-//           backgroundColor: Colors.bodyBackColor,
-//           padding: Sizes.fixPadding,
-//         }}
-//       >
-//         <Text style={{ ...Fonts.grayColor16Medium }}>Options</Text>
-//       </View>
-//     );
-//   }
-
-//   function sizesInfo(sizesArray) {
-//     if (!sizesArray || sizesArray.length === 0) {
-//       return <Text>No sizes available</Text>;
-//     }
-  
-//     const { sizeIndex } = state; 
-  
-//     return (
-//       <View style={{ backgroundColor: Colors.whiteColor, paddingHorizontal: Sizes.fixPadding, paddingTop: Sizes.fixPadding }}>
-//         {sizesArray.map((size, index) => {
-//           return sizes({
-//             size,
-//             // contain and price might not be needed, comment them out if not used
-//             // contain: size.contain, 
-//             // price: size.price, 
-//             index,
-//             sizeIndex,
-//           })
-//         })}
-//       </View>
-//     );
-//   }
-
-//   function sizes({ size, index, sizeIndex }) {
-//     const isSelected = sizeIndex === index;
-    
-//     return (
-//       <View key={index} style={styles.sizesWrapStyle}>
-//         <View style={{ flexDirection: "row", alignItems: "center" }}>
-//           <TouchableOpacity
-//             activeOpacity={0.9}
-//             onPress={() => updateState({ sizeIndex: sizeIndex === index ? null : index })}
-//             style={{
-//               ...styles.radioButtonStyle,
-//               backgroundColor: isSelected ? Colors.primaryColor : Colors.whiteColor,
-//             }}
-//           >
-//             {isSelected && (
-//               <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
-//             )}
-//           </TouchableOpacity>
-//           <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.blackColor16Medium }}>
-//             {size}
-//           </Text>
-//           {/* <Text style={{ marginLeft: Sizes.fixPadding, ...Fonts.grayColor14Medium }}>
-//             ({contain})
-//           </Text>
-//           <Text style={{ ...Fonts.blackColor16Medium }}>${price}</Text> */}
-//         </View>
-//       </View>
-//     );
-//   }  
-
-//   function addNewItemTitle() {
-//     return (
-//       <Text
-//         style={{
-//           marginHorizontal: Sizes.fixPadding,
-//           marginBottom: Sizes.fixPadding + 5.0,
-//           ...Fonts.blackColor19Medium,
-//         }}
-//       >
-//         Add New Item
-//       </Text>
-//     );
-//   }
-
-//   function sizeTitle() {
-//     return (
-//       <View style={styles.sizeTitleStyle}>
-//         <Text style={{ ...Fonts.grayColor16Medium }}>Size</Text>
-//         <Text style={{ ...Fonts.grayColor16Medium }}>Price</Text>
-//       </View>
-//     );
-//   }
-
-
-  // Sheet Function
-  function CustmizeItemInfo({ itemId }) {
-    const selectedItem = cartItems.find(item => item.id === itemId);
-    if (!selectedItem || !showCustomizeBottomSheet) {
-      return null;
+//  Options Function
+  function optionsInfo(option) {
+    if (!option) {
+      return <Text>No Options Available</Text>;
     }
+    return (
+      <View style={{ paddingTop: Sizes.fixPadding }}>
+        <View key={option.id}>
+          <View style={styles.optionWrapStyle}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => updateOptions(option.id)}
+              style={{
+                ...styles.radioButtonStyle,
+                backgroundColor: Colors.orangeRatingColor,
+              }}
+            >
+              {option.isSelected ? (
+                <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
+              ) : null}
+            </TouchableOpacity>
+            <Text
+              style={{
+                marginLeft: Sizes.fixPadding,
+                ...Fonts.blackColor16Medium,
+              }}
+            >
+              {option} 
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  function optionsTitle() {
+    return (
+      <View
+        style={{
+          backgroundColor: Colors.bodyBackColor,
+          padding: Sizes.fixPadding,
+        }}
+      >
+        <Text style={{ ...Fonts.grayColor16Medium }}>Options</Text>
+      </View>
+    );
+  }
+
+  function sizesInfo(size) {
+    if (!size) {
+      return <Text style={{justifyContent:"center",paddingLeft:20,fontStyle:"bold"}}>No Size Available</Text>;
+    }
+    return (
+      <View style={{ paddingTop: Sizes.fixPadding }}>
+        <View key={size.id}>
+          <View style={styles.optionWrapStyle}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => updateOptions(size.id)}
+              style={{
+                ...styles.radioButtonStyle,
+                backgroundColor: Colors.orangeRatingColor,
+              }}
+            >
+              {size.isSelected ? (
+                <MaterialIcons name="done" size={18} color={Colors.whiteColor} />
+              ) : null}
+            </TouchableOpacity>
+            <Text
+              style={{
+                marginLeft: Sizes.fixPadding,
+                ...Fonts.blackColor16Medium,
+              }}
+            >
+              {size} 
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  function addNewItemTitle() {
+    return (
+      <Text
+        style={{
+          marginHorizontal: Sizes.fixPadding,
+          marginBottom: Sizes.fixPadding + 5.0,
+          ...Fonts.blackColor19Medium,
+        }}
+      >
+        Item Details
+      </Text>
+    );
+  }
+
+  function sizeTitle() {
+    return (
+      <View style={styles.sizeTitleStyle}>
+        <Text style={{ ...Fonts.grayColor16Medium }}>Size</Text>
+      </View>
+    );
+  }
+
+
+  function custmizeBottomSheet() {
+    const selectedItem = cartItems.find((mItem) => mItem.id === selectedItemId);
+    if (!selectedItem) {
+      return null; 
+    }
+
     return (
       <BottomSheet
         isVisible={showCustomizeBottomSheet}
@@ -332,9 +278,46 @@ const CartScreen = ({ navigation }) => {
         onBackdropPress={() => 
           updateState({ showCustomizeBottomSheet: false })}
       >
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={{
+            backgroundColor: Colors.whiteColor,
+            borderTopRightRadius: Sizes.fixPadding * 2.0,
+            borderTopLeftRadius: Sizes.fixPadding * 2.0,
+          }}
+        >
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => updateState({ showCustomizeBottomSheet: false })}
+          >
+            <View style={styles.bottomSheetOpenCloseDividerStyle} />
+            {addNewItemTitle()}
+            <CustmizeItemInfo itemId={selectedItemId} />
+          </TouchableOpacity>
+          {sizeTitle()}
+          {sizesInfo(selectedItem.item_sizes)}
+          {optionsTitle()}
+          {optionsInfo(selectedItem.item_options)}
+          {CheckOut(selectedItem)}
+
+        </TouchableOpacity>
+      </BottomSheet>
+    );
+  }
+
+  // Sheet Function
+  function CustmizeItemInfo({ itemId }) { 
+    useEffect(() => { 
+      const filterItem = cartItems.find((item) => item.id === itemId); 
+      setItem(filterItem); 
+    }, [itemId, cartItems]);
+  
+    if (!item) return null;       
+  
+    return (
       <View style={styles.custmizeItemInfoWrapStyle}>
         <Image
-          source={selectedItem.image}
+          source={item.image}
           style={{
             width: 80.0,
             height: 80.0,
@@ -349,7 +332,7 @@ const CartScreen = ({ navigation }) => {
             marginLeft: Sizes.fixPadding,
           }}
         >
-          <Text style={{ ...Fonts.blackColor16Medium }}>{selectedItem.food_name}</Text>
+          <Text style={{ ...Fonts.blackColor16Medium }}>{item.food_name}</Text>
           <View
             style={{
               alignItems: "flex-start",
@@ -357,8 +340,8 @@ const CartScreen = ({ navigation }) => {
               justifyContent: "space-between",
             }}
           >
-            <Text style={{ ...Fonts.primaryColor20MediumBold, color:Colors.orangeRatingColor }}>
-              ${(selectedItem.price * qty).toFixed(1)}
+            <Text style={{ ...Fonts.primaryColor20MediumBold,color:Colors.orangeRatingColor }}>
+              ${(item.price * qty).toFixed(1)}
             </Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <TouchableOpacity
@@ -367,13 +350,13 @@ const CartScreen = ({ navigation }) => {
                   qty > 1 ? updateState({ qty: qty - 1 }) : null;
                 }}
                 style={{
-                  backgroundColor: qty > 1 ? Colors.primaryColor : "#E0E0E0",
+                  backgroundColor: Colors.orangeRatingColor,
                   ...styles.qtyAddRemoveButtonStyle,
                 }}
               >
                 <MaterialIcons
                   name="remove"
-                  color={qty > 1 ? Colors.whiteColor : Colors.orangeRatingColor}
+                  color={qty > 1 ? Colors.whiteColor : Colors.whiteColor}
                   size={18}
                 />
               </TouchableOpacity>
@@ -381,6 +364,7 @@ const CartScreen = ({ navigation }) => {
                 style={{
                   marginHorizontal: Sizes.fixPadding,
                   ...Fonts.blackColor16Medium,
+                  color:Colors.orangeRatingColor
                 }}
               >
                 {qty}
@@ -399,11 +383,26 @@ const CartScreen = ({ navigation }) => {
           </View>
         </View>
       </View>
-      </BottomSheet>
     );
   }
 
 
+  function CheckOut(order) {
+    return (
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={() => {
+          updateState({ showCustomizeBottomSheet: false });
+          navigation.push("ConfirmOrder", { order });
+        }}
+        style={styles.OrdertemsInfoWrapStyle}
+      >
+        <Text style={{ ...Fonts.whiteColor16Medium, textAlign: "center" }}>
+          Order Now
+        </Text>
+      </TouchableOpacity>
+    );
+  }
 
 
 const closeRow = (rowMap, rowKey) => {
@@ -440,6 +439,7 @@ const renderItem = data => (
                 />
                 <View style={{ width: width / 2.0, marginLeft: Sizes.fixPadding, height: 100.0, justifyContent: 'space-evenly' }}>
                     <Text numberOfLines={1} style={{ ...Fonts.blackColor16Medium }}>
+                      
                      {data.item.quantity} {data.item.food_name}
                     </Text>
                    
@@ -557,12 +557,7 @@ return (
             Item Removed
         </Snackbar>
     </View>
-    <CustmizeItemInfo itemId={selectedItemId} />
-    {/* {sizeTitle()}
-    {sizesInfo(selectedItemId.sizes)}
-    {optionsTitle()}
-    {optionsInfo(selectedItemId.options)}
-    {totalInfo(item)} */}
+    {custmizeBottomSheet()}
     </View>
 );
 }
@@ -697,6 +692,53 @@ const styles = StyleSheet.create({
         backgroundColor: Colors.redColor,
         right: 0,
     },
+    addIconWrapStyle: {
+    width: 22.0,
+    height: 22.0,
+    borderRadius: 11.0,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.primaryColor,
+  },
+  OrdertemsInfoWrapStyle: {
+    width: "95%",
+    backgroundColor: Colors.orangeRatingColor,
+    paddingVertical: Sizes.fixPadding,
+    marginHorizontal: Sizes.fixPadding - 1,
+    borderRadius: Sizes.fixPadding - 5.0,
+    paddingHorizontal: Sizes.fixPadding,
+    marginVertical: Sizes.fixPadding,
+  },
+  radioButtonStyle: {
+    width: 27.0,
+    height: 27.0,
+    borderRadius: 13.5,
+    alignItems: "center",
+    justifyContent: "center",
+    borderColor: Colors.grayColor,
+    borderWidth: 1.0,
+    backgroundColor:Colors.orangeRatingColor
+  },
+  optionWrapStyle: {
+    paddingBottom: Sizes.fixPadding,
+    paddingHorizontal: Sizes.fixPadding,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  sizesWrapStyle: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Sizes.fixPadding,
+  },
+  sizeTitleStyle: {
+    backgroundColor: Colors.bodyBackColor,
+    padding: Sizes.fixPadding,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+    
 });
 
 export default CartScreen;
